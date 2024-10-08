@@ -3,7 +3,7 @@
 # 	Module:       main.py                                                      #
 # 	Author:       walto                                                        #
 # 	Created:      10/4/2024, 3:20:43 PM                                        #
-# 	Description:  V5 project                                                   #
+# 	Description:  V5 project with Arcade Drive and Conveyor Belt (R2 control)  #
 #                                                                              #
 # ---------------------------------------------------------------------------- #
 
@@ -11,9 +11,6 @@ from vex import *
 
 # Brain should be defined by default
 brain = Brain()
-
-# 
-#
 
 # The controller
 controller = Controller()
@@ -24,41 +21,65 @@ left_drive_2 = Motor(Ports.PORT2, GearSetting.RATIO_18_1, False)
 right_drive_1 = Motor(Ports.PORT3, GearSetting.RATIO_18_1, True)
 right_drive_2 = Motor(Ports.PORT4, GearSetting.RATIO_18_1, True)
 
+# Conveyor belt motor
+conveyor_motor = Motor(Ports.PORT5, GearSetting.RATIO_18_1, False)
 
 # Max motor speed (percent) for motors controlled by buttons
 MAX_SPEED = 100
 
+# Deadband to prevent small joystick movements from causing unwanted motion
+DEADBAND = 1
 
-# All motors are controlled from this function which is run as a separate thread
+# Sensitivity multiplier
+SENSITIVITY = 1.2
+
+# Conveyor belt speed
+CONVEYOR_SPEED = 100  # Adjust this value as needed
+
+def apply_deadband(value, deadband):
+    if abs(value) < deadband:
+        return 0
+    return value * (abs(value) - deadband) / (100 - deadband)
+
+def apply_sensitivity(value, sensitivity):
+    return value * sensitivity
+
+def clamp(value, min_value, max_value):
+    return max(min(value, max_value), min_value)
 
 def drive_task():
-    drive_left = 0
-    drive_right = 0
-
-
-    # loop forever
     while True:
-        # joystick tank control
-        drive_left = -controller.axis3.position()
-        drive_right = -controller.axis2.position()
+        # Arcade control with increased sensitivity
+        forward = -apply_sensitivity(apply_deadband(controller.axis3.position(), DEADBAND), SENSITIVITY)
+        turn = -apply_sensitivity(apply_deadband(controller.axis1.position(), DEADBAND), SENSITIVITY)
 
-        # threshold the variable channels so the drive does not
-        # move if the joystick axis does not return exactly to 0
-        deadband = 15
-        if abs(drive_left) < deadband:
-            drive_left = 0
-        if abs(drive_right) < deadband:
-            drive_right = 0
+        # Calculate left and right motor speeds
+        left_speed = forward + turn
+        right_speed = forward - turn
 
-        # Now send all drive values to motors
+        # Normalize speeds if they exceed 100%
+        max_raw = max(abs(left_speed), abs(right_speed))
+        if max_raw > 100:
+            left_speed = (left_speed / max_raw) * 100
+            right_speed = (right_speed / max_raw) * 100
 
-        # The drivetrain
-        left_drive_1.spin(FORWARD, drive_left, PERCENT)
-        left_drive_2.spin(FORWARD, drive_left, PERCENT)
-        right_drive_1.spin(FORWARD, drive_right, PERCENT)
-        right_drive_2.spin(FORWARD, drive_right, PERCENT)
+        # Clamp speeds to ensure they're within -100 to 100 range
+        left_speed = clamp(left_speed, -100, 100)
+        right_speed = clamp(right_speed, -100, 100)
 
-        # No need to run too fast
+        # Send values to drive motors
+        left_drive_1.spin(FORWARD, left_speed, PERCENT)
+        left_drive_2.spin(FORWARD, left_speed, PERCENT)
+        right_drive_1.spin(FORWARD, right_speed, PERCENT)
+        right_drive_2.spin(FORWARD, right_speed, PERCENT)
+
+        # Control conveyor belt with R2 button
+        if controller.buttonR2.pressing():
+            conveyor_motor.spin(FORWARD, CONVEYOR_SPEED, PERCENT)
+        else:
+            conveyor_motor.stop()
+
+        # Delay to prevent excessive CPU usage
         sleep(10)
 
 # Run the drive code
