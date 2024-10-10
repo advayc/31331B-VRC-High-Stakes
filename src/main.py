@@ -34,7 +34,7 @@ DEADBAND = 1
 SENSITIVITY = 1.2
 
 # Conveyor belt speed
-CONVEYOR_SPEED = 100  # Adjust this value as needed
+CONVEYOR_SPEED = 50  # Adjust this value as needed
 
 def apply_deadband(value, deadband):
     if abs(value) < deadband:
