@@ -31,10 +31,10 @@ MAX_SPEED = 100
 DEADBAND = 1
 
 # Sensitivity multiplier
-SENSITIVITY = 1.2
+SENSITIVITY = 1.1
 
 # Conveyor belt speed
-CONVEYOR_SPEED = 50  # Adjust this value as needed
+CONVEYOR_SPEED = 100  # Adjust this value as needed
 
 def apply_deadband(value, deadband):
     if abs(value) < deadband:
@@ -76,6 +76,8 @@ def drive_task():
         # Control conveyor belt with R2 button
         if controller.buttonR2.pressing():
             conveyor_motor.spin(FORWARD, CONVEYOR_SPEED, PERCENT)
+        if controller.buttonL2.pressing():
+            conveyor_motor.spin(REVERSE, CONVEYOR_SPEED, PERCENT)
         else:
             conveyor_motor.stop()
 
