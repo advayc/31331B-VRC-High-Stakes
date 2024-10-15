@@ -34,7 +34,7 @@ DEADBAND = 1
 SENSITIVITY = 1.1
 
 # Conveyor belt speed
-CONVEYOR_SPEED = 100  # Adjust this value as needed
+CONVEYOR_SPEED = 80  # Adjust this value as needed
 
 def apply_deadband(value, deadband):
     if abs(value) < deadband:
@@ -83,7 +83,7 @@ def drive_task():
 
         # Delay to prevent excessive CPU usage
         sleep(10)
-        
+
 # Run the drive code
 drive = Thread(drive_task)
 
