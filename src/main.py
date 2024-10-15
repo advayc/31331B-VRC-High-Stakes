@@ -73,17 +73,17 @@ def drive_task():
         right_drive_1.spin(FORWARD, right_speed, PERCENT)
         right_drive_2.spin(FORWARD, right_speed, PERCENT)
 
-        # Control conveyor belt with R2 button
-        if controller.buttonR2.pressing():
-            conveyor_motor.spin(FORWARD, CONVEYOR_SPEED, PERCENT)
+        # Control conveyor belt with L2 and R2 buttons
         if controller.buttonL2.pressing():
+            conveyor_motor.spin(FORWARD, CONVEYOR_SPEED, PERCENT)
+        elif controller.buttonR2.pressing():
             conveyor_motor.spin(REVERSE, CONVEYOR_SPEED, PERCENT)
         else:
             conveyor_motor.stop()
 
         # Delay to prevent excessive CPU usage
         sleep(10)
-
+        
 # Run the drive code
 drive = Thread(drive_task)
 
