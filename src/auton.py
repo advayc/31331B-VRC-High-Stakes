@@ -29,7 +29,7 @@ CONVEYOR_SPEED = 80  # Adjust this value as needed
 
 def drive_task():
     while True:
-        # Arcade control without sensitivity and deadband
+        # Arcade control
         forward = -controller.axis3.position()  # Left stick vertical
         turn = -controller.axis1.position()     # Left stick horizontal
 
@@ -54,7 +54,42 @@ def drive_task():
         # Delay to prevent excessive CPU usage
         sleep(10)
 
-# Run the drive code
+def autonomous_routine():
+    # Move forward for 1 second
+    left_drive_1.spin(FORWARD, 100, PERCENT)
+    left_drive_2.spin(FORWARD, 100, PERCENT)
+    right_drive_1.spin(FORWARD, 100, PERCENT)
+    right_drive_2.spin(FORWARD, 100, PERCENT)
+    sleep(1000)  # Move forward for 1000 milliseconds (1 second)
+    
+    # Run the intake (conveyor) for 1 second
+    conveyor_motor.spin(FORWARD, CONVEYOR_SPEED, PERCENT)
+    sleep(1000)  # Run intake for 1000 milliseconds (1 second)
+    
+    # Stop the conveyor
+    conveyor_motor.stop()
+
+    # Move forward for another second
+    left_drive_1.spin(FORWARD, 100, PERCENT)
+    left_drive_2.spin(FORWARD, 100, PERCENT)
+    right_drive_1.spin(FORWARD, 100, PERCENT)
+    right_drive_2.spin(FORWARD, 100, PERCENT)
+    sleep(1000)  # Move forward for 1000 milliseconds (1 second)
+
+    # Stop the motors
+    left_drive_1.stop()
+    left_drive_2.stop()
+    right_drive_1.stop()
+    right_drive_2.stop()
+
+# Run the drive code in a thread
 drive = Thread(drive_task)
+
+# Wait for button X to start the autonomous routine
+while True:
+    if controller.buttonX.pressing():
+        # Start autonomous routine
+        autonomous_routine()
+        break  # Exit the loop after starting autonomous
 
 # Python now drops into REPL
