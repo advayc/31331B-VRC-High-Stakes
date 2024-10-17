@@ -3,7 +3,7 @@
 # 	Module:       main.py                                                      #
 # 	Author:       walto                                                        #
 # 	Created:      10/4/2024, 3:20:43 PM                                        #
-# 	Description:  V5 project with Arcade Drive and Conveyor Belt (R2 control)  #
+# 	Description:  V5 project with Arcade Drive, Conveyor Belt, and Pneumatics  #
 #                                                                              #
 # ---------------------------------------------------------------------------- #
 
@@ -24,8 +24,11 @@ right_drive_2 = Motor(Ports.PORT4, GearSetting.RATIO_18_1, True)
 # Conveyor belt motor
 conveyor_motor = Motor(Ports.PORT5, GearSetting.RATIO_18_1, False)
 
+# Pneumatic piston connected to three-wire port A
+piston = DigitalOut(brain.three_wire_port.a)
+
 # Conveyor belt speed
-CONVEYOR_SPEED = 80  # Adjust this value as needed
+CONVEYOR_SPEED = 95  # Adjust this value as needed
 
 def drive_task():
     while True:
@@ -50,6 +53,12 @@ def drive_task():
             conveyor_motor.spin(REVERSE, CONVEYOR_SPEED, PERCENT)
         else:
             conveyor_motor.stop()
+
+        # Control pneumatic piston with L1 and L2 buttons
+        if controller.buttonL1.pressing():
+            piston.set(True)  # Extend piston
+        elif controller.buttonL2.pressing():
+            piston.set(False)  # Retract piston
 
         # Delay to prevent excessive CPU usage
         sleep(10)
