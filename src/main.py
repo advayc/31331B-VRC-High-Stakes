@@ -57,7 +57,7 @@ def drive_task():
         # Control pneumatic piston with L1 and L2 buttons
         if controller.buttonL1.pressing():
             piston.set(True)  # Extend piston
-        elif controller.buttonL2.pressing():
+        elif controller.buttonR1.pressing():
             piston.set(False)  # Retract piston
 
         # Delay to prevent excessive CPU usage
