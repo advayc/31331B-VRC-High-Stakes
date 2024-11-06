@@ -24,15 +24,61 @@ right_drive_2 = Motor(Ports.PORT4, GearSetting.RATIO_18_1, True)
 # Conveyor belt motor
 conveyor_motor = Motor(Ports.PORT5, GearSetting.RATIO_18_1, False)
 
-# Pneumatic piston connected to three-wire port A
-piston = DigitalOut(brain.three_wire_port.a)
+# Pneumatic piston connected to three-wire port c and d
+piston1 = DigitalOut(brain.three_wire_port.c)
+piston2 = DigitalOut(brain.three_wire_port.d)
 
 # Conveyor belt speed
-CONVEYOR_SPEED = 95  # Adjust this value as needed
+CONVEYOR_SPEED = 100
+
+def autonomous():
+    # Move forward at medium speed
+    left_speed = 50
+    right_speed = 50
+    left_drive_1.spin(FORWARD, left_speed, PERCENT)
+    left_drive_2.spin(FORWARD, left_speed, PERCENT)
+    right_drive_1.spin(FORWARD, right_speed, PERCENT)
+    right_drive_2.spin(FORWARD, right_speed, PERCENT)
+    
+    # Run for 2 seconds
+    sleep(2000)
+    
+    # Turn left (right motors forward, left motors reverse)
+    left_drive_1.spin(REVERSE, left_speed, PERCENT)
+    left_drive_2.spin(REVERSE, left_speed, PERCENT)
+    right_drive_1.spin(FORWARD, right_speed, PERCENT)
+    right_drive_2.spin(FORWARD, right_speed, PERCENT)
+    
+    # Turn for 1 second
+    sleep(1000)
+    
+    # Stop turning
+    left_drive_1.stop()
+    left_drive_2.stop()
+    right_drive_1.stop()
+    right_drive_2.stop()
+    
+    # Move forward and activate the conveyor motor
+    left_drive_1.spin(FORWARD, left_speed, PERCENT)
+    left_drive_2.spin(FORWARD, left_speed, PERCENT)
+    right_drive_1.spin(FORWARD, right_speed, PERCENT)
+    right_drive_2.spin(FORWARD, right_speed, PERCENT)
+    conveyor_motor.spin(FORWARD, CONVEYOR_SPEED, PERCENT)
+    
+    # Run both for 2 seconds
+    sleep(2000)
+    
+    # Stop all motors
+    left_drive_1.stop()
+    left_drive_2.stop()
+    right_drive_1.stop()
+    right_drive_2.stop()
+    conveyor_motor.stop()
 
 def drive_task():
+    # autonomous()
     while True:
-        # Arcade control without sensitivity and deadband
+        # Arcade control
         forward = -controller.axis3.position()  # Left stick vertical
         turn = -controller.axis1.position()     # Left stick horizontal
 
@@ -56,9 +102,11 @@ def drive_task():
 
         # Control pneumatic piston with L1 and L2 buttons
         if controller.buttonL1.pressing():
-            piston.set(True)  # Extend piston
+            piston1.set(True)  # Extend piston
+            piston2.set(True)  # Extend piston
         elif controller.buttonR1.pressing():
-            piston.set(False)  # Retract piston
+            piston1.set(False)  # Retract piston
+            piston2.set(False)  # Retract piston
 
         # Delay to prevent excessive CPU usage
         sleep(10)
