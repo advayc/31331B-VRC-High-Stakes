@@ -1,14 +1,13 @@
 # ---------------------------------------------------------------------------- #
 #                                                                              #
 # 	Module:       main.py                                                      #
-# 	Author:       walto                                                        #
-# 	Created:      10/27/2024, 10:20:23 PM                                      #
-# 	Description:  V5 project with Arcade Drive, Conveyor Belt, and Pneumatics  #
+# 	Author:       advay                                                        #
+# 	Created:      11/07/2024, 10:20:23 PM                                      #
+# 	Description:  first auton test using pid control  #
 #                                                                              #
 # ---------------------------------------------------------------------------- #
 
 from vex import *
-import math
 
 # Brain should be defined by default
 brain = Brain()

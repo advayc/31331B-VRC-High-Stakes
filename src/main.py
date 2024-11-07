@@ -41,7 +41,7 @@ def autonomous():
     right_drive_2.spin(FORWARD, right_speed, PERCENT)
     
     # Run for 2 seconds
-    sleep(2000)
+    sleep(1000)
     
     # Turn left (right motors forward, left motors reverse)
     left_drive_1.spin(REVERSE, left_speed, PERCENT)
@@ -64,7 +64,12 @@ def autonomous():
     right_drive_1.spin(FORWARD, right_speed, PERCENT)
     right_drive_2.spin(FORWARD, right_speed, PERCENT)
     conveyor_motor.spin(FORWARD, CONVEYOR_SPEED, PERCENT)
-    
+    conveyor_motor.spin(REVERSE, CONVEYOR_SPEED, PERCENT)
+    piston1.set(True)  # Extend piston
+    piston2.set(True)  # Extend piston
+    piston1.set(False)  # Extend piston
+    piston2.set(False)  # Extend piston
+
     # Run both for 2 seconds
     sleep(2000)
     
@@ -76,7 +81,6 @@ def autonomous():
     conveyor_motor.stop()
 
 def drive_task():
-    # autonomous()
     while True:
         # Arcade control
         forward = -controller.axis3.position()  # Left stick vertical
@@ -111,7 +115,8 @@ def drive_task():
         # Delay to prevent excessive CPU usage
         sleep(10)
 
+autonomous()
 # Run the drive code
 drive = Thread(drive_task)
-
+competition = Competition(drive_task, autonomous)
 # Python now drops into REPL
