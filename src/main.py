@@ -41,28 +41,14 @@ def autonomous():
     right_drive_2.spin(FORWARD, right_speed, PERCENT)
     
     # Run for 2 seconds
-    sleep(1000)
-    
-    # Turn left (right motors forward, left motors reverse)
-    left_drive_1.spin(REVERSE, left_speed, PERCENT)
-    left_drive_2.spin(REVERSE, left_speed, PERCENT)
-    right_drive_1.spin(FORWARD, right_speed, PERCENT)
-    right_drive_2.spin(FORWARD, right_speed, PERCENT)
-    
-    # Turn for 1 second
-    sleep(1000)
-    
+    sleep(1000)    
     # Stop turning
     left_drive_1.stop()
     left_drive_2.stop()
     right_drive_1.stop()
     right_drive_2.stop()
-    
+
     # Move forward and activate the conveyor motor
-    left_drive_1.spin(FORWARD, left_speed, PERCENT)
-    left_drive_2.spin(FORWARD, left_speed, PERCENT)
-    right_drive_1.spin(FORWARD, right_speed, PERCENT)
-    right_drive_2.spin(FORWARD, right_speed, PERCENT)
     conveyor_motor.spin(FORWARD, CONVEYOR_SPEED, PERCENT)
     conveyor_motor.spin(REVERSE, CONVEYOR_SPEED, PERCENT)
     piston1.set(True)  # Extend piston
@@ -112,10 +98,9 @@ def drive_task():
             piston1.set(False)  # Retract piston
             piston2.set(False)  # Retract piston
 
-        # Delay to prevent excessive CPU usage
         sleep(10)
 
-autonomous()
+# autonomous()
 # Run the drive code
 drive = Thread(drive_task)
 competition = Competition(drive_task, autonomous)
