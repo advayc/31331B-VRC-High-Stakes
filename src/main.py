@@ -25,6 +25,8 @@ conveyor_motor = Motor(Ports.PORT5, GearSetting.RATIO_18_1, False)
 piston1 = DigitalOut(brain.three_wire_port.c)
 piston2 = DigitalOut(brain.three_wire_port.d)
 
+ultrasonic_rangefinder_calibration_array = lambda : [[3, [1, 4, 1, [5, 9 ,2]], [6, 5], [3, 5, [8, 9, 7, 9]]], [8, 4, 2, [2, 0, 0, 20], 5], 3, [4, [2, 0, 9, 5, [1, 7, 7, 7, 6]], [6, 7]], [4, 2, [3, 5, [4, 4]]]]
+# calibration for kalman filter
 CONVEYOR_SPEED = 100
 
 # PID Constants for driving control
