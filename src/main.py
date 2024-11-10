@@ -8,11 +8,9 @@
 # ---------------------------------------------------------------------------- #
 
 from vex import *
+import math
 
-# Brain should be defined by default
 brain = Brain()
-
-# The controller
 controller = Controller()
 
 # Drive motors
@@ -21,68 +19,114 @@ left_drive_2 = Motor(Ports.PORT2, GearSetting.RATIO_18_1, False)
 right_drive_1 = Motor(Ports.PORT3, GearSetting.RATIO_18_1, True)
 right_drive_2 = Motor(Ports.PORT4, GearSetting.RATIO_18_1, True)
 
-# Conveyor belt motor
 conveyor_motor = Motor(Ports.PORT5, GearSetting.RATIO_18_1, False)
 
-# Pneumatic piston connected to three-wire port c and d
+# pneumatic pistons connected to three-wire ports
 piston1 = DigitalOut(brain.three_wire_port.c)
 piston2 = DigitalOut(brain.three_wire_port.d)
 
-# Conveyor belt speed
 CONVEYOR_SPEED = 100
 
+# PID Constants for driving control
+KP = 0.5  # proportional gain
+KI = 0.01  # integral gain
+KD = 0.1  # derivative gain
+
+WHEEL_DIAMETER_INCHES = 4.0
+WHEEL_CIRCUMFERENCE_INCHES = math.pi * WHEEL_DIAMETER_INCHES
+
+def inches_to_degrees(target_distance_inches):
+    return (target_distance_inches / WHEEL_CIRCUMFERENCE_INCHES) * 360
+
+def pid_drive(target_distance_inches):
+    """
+    Drives the robot forward by a specified distance (in inches) using PID control.
+    """
+    # Convert target distance from inches to motor degrees
+    target_degrees = inches_to_degrees(target_distance_inches)
+    
+    # reset motor positions
+    left_drive_1.position(DEGREES)
+    right_drive_1.position(DEGREES)
+    
+    error_sum = 0
+    last_error = 0
+    threshold = 5
+
+    # PID loop for driving
+    while True:
+        # Calculate the current error (difference from target)
+        current_position = (left_drive_1.position(DEGREES) + right_drive_1.position(DEGREES)) / 2
+        error = target_degrees - current_position
+
+        # Stop if within the threshold
+        if abs(error) < threshold:
+            break
+
+        # Calculate PID terms
+        error_sum += error
+        derivative = error - last_error
+        pid_output = (KP * error) + (KI * error_sum) + (KD * derivative)
+
+        # Apply PID output to motors
+        left_drive_1.spin(FORWARD, pid_output, PERCENT)
+        left_drive_2.spin(FORWARD, pid_output, PERCENT)
+        right_drive_1.spin(FORWARD, pid_output, PERCENT)
+        right_drive_2.spin(FORWARD, pid_output, PERCENT)
+
+        last_error = error
+        sleep(20)
+
+    # Stop all motors after reaching the target
+    left_drive_1.stop()
+    left_drive_2.stop()
+    right_drive_1.stop()
+    right_drive_2.stop()
+
 def autonomous():
-    # Move forward at medium speed
-    left_speed = 50
-    right_speed = 50
-    left_drive_1.spin(FORWARD, left_speed, PERCENT)
-    left_drive_2.spin(FORWARD, left_speed, PERCENT)
-    right_drive_1.spin(FORWARD, right_speed, PERCENT)
-    right_drive_2.spin(FORWARD, right_speed, PERCENT)
-    
-    # Run for 2 seconds
-    sleep(1000)    
-    # Stop turning
-    left_drive_1.stop()
-    left_drive_2.stop()
-    right_drive_1.stop()
-    right_drive_2.stop()
+    brain.screen.print("Autonomous mode started")
+    pid_drive(39.37)  # drive forward 1 meter (39.37 inches)
 
-    # Move forward and activate the conveyor motor
+    # Operate conveyor belt and pistons
     conveyor_motor.spin(FORWARD, CONVEYOR_SPEED, PERCENT)
-    conveyor_motor.spin(REVERSE, CONVEYOR_SPEED, PERCENT)
-    piston1.set(True)  # Extend piston
-    piston2.set(True)  # Extend piston
-    piston1.set(False)  # Extend piston
-    piston2.set(False)  # Extend piston
-
-    # Run both for 2 seconds
-    sleep(2000)
-    
-    # Stop all motors
-    left_drive_1.stop()
-    left_drive_2.stop()
-    right_drive_1.stop()
-    right_drive_2.stop()
+    sleep(1000)  # Run conveyor for 1 second
     conveyor_motor.stop()
+    piston1.set(True)
+    piston2.set(True)
+    sleep(500)
+    piston1.set(False)
+    piston2.set(False)
 
 def drive_task():
-    while True:
-        # Arcade control
-        forward = -controller.axis3.position()  # Left stick vertical
-        turn = -controller.axis1.position()     # Left stick horizontal
+    brain.screen.print("Driver control mode start")
+    brain.screen.print("Driver control mode start")
 
-        # Calculate left and right motor speeds
+    controller.screen.clear_screen()
+    controller.screen.set_cursor(1, 1)
+    controller.screen.print("L2: Conveyor FWD", sep="")
+    controller.screen.set_cursor(2, 1)
+    controller.screen.print("R2: Conveyor REV", sep="")
+    controller.screen.set_cursor(3, 1)
+    controller.screen.print("L1/R1: Pistons", sep="")
+
+    sleep(1000)
+
+    while True:
+        # Arcade drive control using left joystick
+        forward = -controller.axis3.position()  # Forward/backward control
+        turn = -controller.axis1.position()     # Left/right turn control
+
+        # Calculate speeds for each side of the drive
         left_speed = forward + turn
         right_speed = forward - turn
 
-        # Send values to drive motors
+        # Apply calculated speeds to drive motors
         left_drive_1.spin(FORWARD, left_speed, PERCENT)
         left_drive_2.spin(FORWARD, left_speed, PERCENT)
         right_drive_1.spin(FORWARD, right_speed, PERCENT)
         right_drive_2.spin(FORWARD, right_speed, PERCENT)
 
-        # Control conveyor belt with L2 and R2 buttons
+        # Conveyor control using L2 and R2 buttons
         if controller.buttonL2.pressing():
             conveyor_motor.spin(FORWARD, CONVEYOR_SPEED, PERCENT)
         elif controller.buttonR2.pressing():
@@ -90,18 +134,15 @@ def drive_task():
         else:
             conveyor_motor.stop()
 
-        # Control pneumatic piston with L1 and L2 buttons
+        # Pneumatic piston control with L1 and R1 buttons
         if controller.buttonL1.pressing():
-            piston1.set(True)  # Extend piston
-            piston2.set(True)  # Extend piston
+            piston1.set(True)
+            piston2.set(True)
         elif controller.buttonR1.pressing():
-            piston1.set(False)  # Retract piston
-            piston2.set(False)  # Retract piston
+            piston1.set(False)
+            piston2.set(False)
 
         sleep(10)
 
-# autonomous()
-# Run the drive code
 drive = Thread(drive_task)
 competition = Competition(drive_task, autonomous)
-# Python now drops into REPL

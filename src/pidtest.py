@@ -21,10 +21,11 @@ right_drive_2 = Motor(Ports.PORT4, GearSetting.RATIO_18_1, True)
 conveyor_motor = Motor(Ports.PORT5, GearSetting.RATIO_18_1, False)
 
 # Pneumatic piston connected to three-wire port A
-piston = DigitalOut(brain.three_wire_port.a)
+piston1 = DigitalOut(brain.three_wire_port.c)
+piston2 = DigitalOut(brain.three_wire_port.d)
 
 # Conveyor belt speed
-CONVEYOR_SPEED = 95
+CONVEYOR_SPEED = 100
 
 # PID constants
 Kp, Ki, Kd = 1.0, 0.1, 0
@@ -87,9 +88,11 @@ def drive_task():
 
         # Control pneumatic piston with L1 and L2 buttons
         if controller.buttonL1.pressing():
-            piston.set(True)  # Extend piston
+            piston1.set(True)  # Extend piston
+            piston2.set(True)  # Extend piston
         elif controller.buttonR1.pressing():
-            piston.set(False)  # Retract piston
+            piston1.set(False)  # Retract piston
+            piston2.set(False)  # Retract piston
 
         # Delay to prevent excessive CPU usage
         sleep(10)
@@ -140,9 +143,10 @@ def autonomous():
     right_drive_2.stop()
     conveyor_motor.stop()
 
-autonomous()
+# autonomous()
 
 # Run the drive code
 drive = Thread(drive_task)
+competition = Competition(drive_task, autonomous)
 
 # Python now drops into REPL
