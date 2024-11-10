@@ -130,11 +130,15 @@ def turn_to_heading(target_heading):
 
 def autonomous():
     brain.screen.print("Autonomous mode started")
+    controller.screen.print("Autonomous mode started")    
+    controller.screen.clear_screen()
 
     # Move the pistons forward (extend)
     piston1.set(True)
     piston2.set(True)
     brain.screen.print("Pistons extended")
+    controller.screen.print("Pistons extended")
+    controller.screen.clear_screen()
     sleep(500)  # Wait for 0.5 seconds while pistons are extended
 
     # Move the robot right by rotating 90 degrees
@@ -143,6 +147,8 @@ def autonomous():
 
     conveyor_motor.spin(FORWARD, CONVEYOR_SPEED, PERCENT)
     brain.screen.print("Conveyor running")
+    controller.screen.print("Conveyor running")
+    controller.screen.clear_screen()
     sleep(1000)
     conveyor_motor.stop()  # Stop conveyor
 
@@ -150,6 +156,8 @@ def autonomous():
     piston1.set(False)
     piston2.set(False)
     brain.screen.print("Pistons retracted")
+    controller.screen.print("Pistons retracted")
+    controller.screen.clear_screen()
     sleep(500)
 
     # Move right by rotating another 90 degrees to face the original direction (180 degrees)
@@ -162,6 +170,9 @@ def autonomous():
     turn_to_heading(0)
 
     brain.screen.print("Autonomous mode complete")
+    controller.screen.print("Autonomous mode complete")
+    controller.screen.clear_screen()
+
 
 def drive_task():
     brain.screen.print("Driver control mode start")
