@@ -4,8 +4,8 @@
 		"json": 2
 	},
 	"project": {
-		"name": "Drive",
-		"description": "Code for correct wire motors",
+		"name": "primary drive",
+		"description": "primary drive no auton",
 		"creationDate": "10/4/2024, 3:20:43 PM",
 		"platform": "V5",
 		"language": "python",
