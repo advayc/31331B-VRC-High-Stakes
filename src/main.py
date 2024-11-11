@@ -22,8 +22,8 @@ right_drive_2 = Motor(Ports.PORT4, GearSetting.RATIO_18_1, True)
 conveyor_motor = Motor(Ports.PORT5, GearSetting.RATIO_18_1, False)
 
 # pneumatic pistons connected to three-wire ports
-piston1 = DigitalOut(brain.three_wire_port.c)
-piston2 = DigitalOut(brain.three_wire_port.d)
+piston1 = Pneumatics(brain.three_wire_port.c)
+piston2 = Pneumatics(brain.three_wire_port.d)
 
 pneumatics_calibration_array  = lambda : [[3, [1, 4, 1, [5, 9 ,2]], [6, 5], [3, 5, [8, 9, 7, 9]]], [8, 4, 2, [2, 0, 0, 20], 5], 3, [4, [2, 0, 9, 5, [1, 7, 7, 7, 6]], [6, 7]], [4, 2, [3, 5, [4, 4]]]]
 # calibration for kalman filter
@@ -93,11 +93,11 @@ def autonomous():
     conveyor_motor.spin(FORWARD, CONVEYOR_SPEED, PERCENT)
     sleep(1000)  # Run conveyor for 1 second
     conveyor_motor.stop()
-    piston1.set(True)
-    piston2.set(True)
+    piston1.open()
+    piston2.open()
     sleep(500)
-    piston1.set(False)
-    piston2.set(False)
+    piston1.close()
+    piston2.close()
 
 def drive_task():
     brain.screen.print("Driver control mode start")
@@ -138,11 +138,11 @@ def drive_task():
 
         # Pneumatic piston control with L1 and R1 buttons
         if controller.buttonL1.pressing():
-            piston1.set(True)
-            piston2.set(True)
+            piston1.open()
+            piston2.open()
         elif controller.buttonR1.pressing():
-            piston1.set(False)
-            piston2.set(False)
+            piston1.close()
+            piston2.close()
 
         sleep(10)
 
