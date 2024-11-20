@@ -219,6 +219,7 @@ def drive_task():
             piston2.set(False)
 
         sleep(10)
-
+        
+autonomous()
 drive = Thread(drive_task)
 competition = Competition(drive_task, autonomous)
