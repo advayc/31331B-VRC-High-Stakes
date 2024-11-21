@@ -7,15 +7,6 @@
 #                                                                              #
 # ---------------------------------------------------------------------------- #
 
-# ---------------------------------------------------------------------------- #
-#                                                                              #
-# 	Module:       main.py                                                      #
-# 	Author:       Advay Chandorkar                                             #
-# 	Created:      11/19/2024, 6:42:43 PM                                       #
-# 	Description:  V5 project                                                   #
-#                                                                              #
-# ---------------------------------------------------------------------------- #
-
 from vex import *
 import math
 
@@ -33,7 +24,6 @@ conveyor_motor = Motor(Ports.PORT5, GearSetting.RATIO_18_1, False)
 
 # Pneumatic pistons connected to three-wire ports
 piston1 = Pneumatics(brain.three_wire_port.c)
-piston2 = Pneumatics(brain.three_wire_port.d)
 
 # Constants
 CONVEYOR_SPEED = 100
@@ -95,10 +85,8 @@ def autonomous():
     sleep(1000)
     conveyor_motor.stop()
     piston1.open()
-    piston2.open()
     sleep(500)
     piston1.close()
-    piston2.close()
 
 def display_controls_summary():
     """
@@ -106,11 +94,11 @@ def display_controls_summary():
     """
     controller.screen.clear_screen()
     controller.screen.set_cursor(1, 1)
-    controller.screen.print("LJoystick: Movement")
+    controller.screen.print("L1/R1 PISTON OPEN")
     controller.screen.set_cursor(2, 1)
-    controller.screen.print("RJoystick: Conveyor")
+    controller.screen.print("L2/R2 PISTON CLOSE")
     controller.screen.set_cursor(3, 1)
-    controller.screen.print("L1 R1: Pistons")
+    controller.screen.print("R JOYSTICK")
 
 def drive_task():
     brain.screen.print("Driver control mode started")
@@ -118,35 +106,34 @@ def drive_task():
     sleep(1000)
 
     while True:
-        # Movement control using left joystick
-        forward = -controller.axis3.position()  # Forward/backward control
-        turn = -controller.axis1.position()    # Left/right turn control
+        forward = controller.axis3.position()  # Forward/backward control
+        turn = controller.axis4.position()     # Left/right turn control
 
         left_speed = forward + turn
         right_speed = forward - turn
 
-        left_drive_1.spin(FORWARD, left_speed, PERCENT)
-        left_drive_2.spin(FORWARD, left_speed, PERCENT)
-        right_drive_1.spin(FORWARD, right_speed, PERCENT)
-        right_drive_2.spin(FORWARD, right_speed, PERCENT)
+        left_drive_1.spin(REVERSE, left_speed, PERCENT)
+        left_drive_2.spin(REVERSE, left_speed, PERCENT)
+        right_drive_1.spin(REVERSE, right_speed, PERCENT)
+        right_drive_2.spin(REVERSE, right_speed, PERCENT)
 
-        # Conveyor control using right joystick
+        # Conveyor control using right joystick (vertical axis only)
         conveyor_speed = controller.axis2.position()
-        if conveyor_speed > 0:
+        if conveyor_speed != 0:
             conveyor_motor.spin(FORWARD, conveyor_speed, PERCENT)
-        elif conveyor_speed < 0:
-            conveyor_motor.spin(REVERSE, abs(conveyor_speed), PERCENT)
         else:
             conveyor_motor.stop()
 
-        # Pneumatic control using L1 and L2 buttons
+        # Pneumatic control using L1 and R1 buttons
         if controller.buttonL1.pressing():
-            piston1.open()
-            piston2.open()
-        elif controller.buttonR1.pressing():
             piston1.close()
-            piston2.close()
-
+        if controller.buttonR1.pressing():
+            piston1.close()
+        elif controller.buttonR2.pressing():
+            piston1.open()
+        elif controller.buttonL2.pressing():
+            piston1.open()
+        
         sleep(10)
 
 # Competition setup
