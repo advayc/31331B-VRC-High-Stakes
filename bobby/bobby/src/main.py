@@ -153,6 +153,4 @@ def drive_task():
         sleep(10)
 
 # Competition setup
-drive = Thread(drive_task)
 competition = Competition(drive_task, autonomous)
-autonomous()
