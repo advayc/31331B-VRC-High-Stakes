@@ -13,23 +13,23 @@ import math
 brain = Brain()
 controller = Controller()
 
-# drive motors
+# Drive motors
 left_drive_1 = Motor(Ports.PORT1, GearSetting.RATIO_18_1, False)
 left_drive_2 = Motor(Ports.PORT2, GearSetting.RATIO_18_1, False)
 right_drive_1 = Motor(Ports.PORT3, GearSetting.RATIO_18_1, True)
 right_drive_2 = Motor(Ports.PORT4, GearSetting.RATIO_18_1, True)
 
-# conveyor motor
+# Conveyor motor
 conveyor_motor = Motor(Ports.PORT5, GearSetting.RATIO_18_1, False)
 
-# pneumatic pistons
+# Pneumatic pistons connected to three-wire ports
 piston1 = Pneumatics(brain.three_wire_port.c)
 
-# constants
+# Constants
 CONVEYOR_SPEED = 100
-KP = 0.5
-KI = 0.01
-KD = 0.1
+KP = 0.5  # proportional gain
+KI = 0.01  # integral gain
+KD = 0.1  # derivative gain
 WHEEL_DIAMETER_INCHES = 4.0
 WHEEL_CIRCUMFERENCE_INCHES = math.pi * WHEEL_DIAMETER_INCHES
 
@@ -37,13 +37,21 @@ def inches_to_degrees(target_distance_inches):
     return (target_distance_inches / WHEEL_CIRCUMFERENCE_INCHES) * 360
 
 def pid_drive(target_distance_inches):
+    """
+    Drives the robot forward by a specified distance (in inches) using PID control.
+    """
+    # Convert target distance from inches to motor degrees
     target_degrees = inches_to_degrees(target_distance_inches)
+    
+    # Reset motor positions
     left_drive_1.position(DEGREES)
     right_drive_1.position(DEGREES)
+    
     error_sum = 0
     last_error = 0
     threshold = 5
 
+    # PID loop for driving
     while True:
         current_position = (left_drive_1.position(DEGREES) + right_drive_1.position(DEGREES)) / 2
         error = target_degrees - current_position
@@ -68,42 +76,38 @@ def pid_drive(target_distance_inches):
     right_drive_1.stop()
     right_drive_2.stop()
 
-def rotate_degrees(degrees, speed=50):
-    wheel_track = 12.0  # distance between left and right wheels
-    rotation_distance = math.pi * wheel_track * (abs(degrees) / 360.0)
-    motor_degrees = inches_to_degrees(rotation_distance)
-
-    if degrees > 0:
-        left_drive_1.spin_for(REVERSE, motor_degrees, DEGREES, speed, wait=False)
-        left_drive_2.spin_for(REVERSE, motor_degrees, DEGREES, speed, wait=False)
-        right_drive_1.spin_for(FORWARD, motor_degrees, DEGREES, speed, wait=True)
-        right_drive_2.spin_for(FORWARD, motor_degrees, DEGREES, speed, wait=True)
-    else:
-        left_drive_1.spin_for(FORWARD, motor_degrees, DEGREES, speed, wait=False)
-        left_drive_2.spin_for(FORWARD, motor_degrees, DEGREES, speed, wait=False)
-        right_drive_1.spin_for(REVERSE, motor_degrees, DEGREES, speed, wait=True)
-        right_drive_2.spin_for(REVERSE, motor_degrees, DEGREES, speed, wait=True)
-
-def run_conveyor_forward(duration_ms):
-    conveyor_motor.spin(FORWARD, CONVEYOR_SPEED, PERCENT)
-    sleep(duration_ms)
-    conveyor_motor.stop()
-
 def autonomous():
-    brain.screen.clear_screen()
-    brain.screen.print("autonomous mode started")
+    # Move forward for 2 seconds
+    left_drive_1.spin(FORWARD, 50, PERCENT)
+    left_drive_2.spin(FORWARD, 50, PERCENT)
+    right_drive_1.spin(FORWARD, 50, PERCENT)
+    right_drive_2.spin(FORWARD, 50, PERCENT)
+    sleep(2000)
 
-    # rotate left 90 degrees
-    rotate_degrees(90, speed=50)
-    # move forward to colored wall stake
-    pid_drive(24)
-    # run conveyor to drop the ring
-    run_conveyor_forward(2000)
+    # Stop motors
+    left_drive_1.stop()
+    left_drive_2.stop()
+    right_drive_1.stop()
+    right_drive_2.stop()
+    sleep(500)
 
-    brain.screen.clear_screen()
-    brain.screen.print("autonomous routine complete")
+    # Move backward for 2 seconds
+    left_drive_1.spin(REVERSE, 50, PERCENT)
+    left_drive_2.spin(REVERSE, 50, PERCENT)
+    right_drive_1.spin(REVERSE, 50, PERCENT)
+    right_drive_2.spin(REVERSE, 50, PERCENT)
+    sleep(2000)
+
+    # Stop motors
+    left_drive_1.stop()
+    left_drive_2.stop()
+    right_drive_1.stop()
+    right_drive_2.stop()
 
 def display_controls_summary():
+    """
+    Displays a summary of controls on the controller screen.
+    """
     controller.screen.clear_screen()
     controller.screen.set_cursor(1, 1)
     controller.screen.print("L1/R1 PISTON OPEN")
@@ -113,12 +117,13 @@ def display_controls_summary():
     controller.screen.print("R JOYSTICK")
 
 def drive_task():
+    brain.screen.print("Driver control mode started")
     display_controls_summary()
     sleep(1000)
 
     while True:
-        forward = controller.axis3.position()
-        turn = controller.axis4.position()
+        forward = controller.axis3.position()  # Forward/backward control
+        turn = controller.axis4.position()     # Left/right turn control
 
         left_speed = forward + turn
         right_speed = forward - turn
@@ -128,12 +133,14 @@ def drive_task():
         right_drive_1.spin(REVERSE, right_speed, PERCENT)
         right_drive_2.spin(REVERSE, right_speed, PERCENT)
 
+        # Conveyor control using right joystick (vertical axis only)
         conveyor_speed = controller.axis2.position()
         if conveyor_speed != 0:
             conveyor_motor.spin(FORWARD, conveyor_speed, PERCENT)
         else:
             conveyor_motor.stop()
 
+        # Pneumatic control using L1 and R1 buttons
         if controller.buttonL1.pressing():
             piston1.close()
         if controller.buttonR1.pressing():
@@ -142,9 +149,10 @@ def drive_task():
             piston1.open()
         elif controller.buttonL2.pressing():
             piston1.open()
-
+        
         sleep(10)
 
-# competition setup
+# Competition setup
 drive = Thread(drive_task)
 competition = Competition(drive_task, autonomous)
+autonomous()
