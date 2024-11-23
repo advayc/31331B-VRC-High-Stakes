@@ -41,36 +41,24 @@ def inches_to_degrees(target_distance_inches):
     return (target_distance_inches / WHEEL_CIRCUMFERENCE_INCHES) * 360
 
 def pid_drive(target_distance_inches):
-    """
-    Drives the robot forward by a specified distance (in inches) using PID control.
-    """
-    # Convert target distance from inches to motor degrees
     target_degrees = inches_to_degrees(target_distance_inches)
-    
-    # reset motor positions
     left_drive_1.position(DEGREES)
     right_drive_1.position(DEGREES)
-    
     error_sum = 0
     last_error = 0
     threshold = 5
 
-    # PID loop for driving
     while True:
-        # Calculate the current error (difference from target)
         current_position = (left_drive_1.position(DEGREES) + right_drive_1.position(DEGREES)) / 2
         error = target_degrees - current_position
 
-        # Stop if within the threshold
         if abs(error) < threshold:
             break
 
-        # Calculate PID terms
         error_sum += error
         derivative = error - last_error
         pid_output = (KP * error) + (KI * error_sum) + (KD * derivative)
 
-        # Apply PID output to motors
         left_drive_1.spin(FORWARD, pid_output, PERCENT)
         left_drive_2.spin(FORWARD, pid_output, PERCENT)
         right_drive_1.spin(FORWARD, pid_output, PERCENT)
@@ -79,25 +67,45 @@ def pid_drive(target_distance_inches):
         last_error = error
         sleep(20)
 
-    # Stop all motors after reaching the target
     left_drive_1.stop()
     left_drive_2.stop()
     right_drive_1.stop()
     right_drive_2.stop()
 
-def autonomous():
-    brain.screen.print("Autonomous mode started")
-    pid_drive(39.37)  # drive forward 1 meter (39.37 inches)
+def rotate_degrees(degrees, speed=50):
+    wheel_track = 12.0  # distance between left and right wheels
+    rotation_distance = math.pi * wheel_track * (abs(degrees) / 360.0)
+    motor_degrees = inches_to_degrees(rotation_distance)
 
-    # Operate conveyor belt and pistons
+    if degrees > 0:
+        left_drive_1.spin_for(REVERSE, motor_degrees, DEGREES, speed, wait=False)
+        left_drive_2.spin_for(REVERSE, motor_degrees, DEGREES, speed, wait=False)
+        right_drive_1.spin_for(FORWARD, motor_degrees, DEGREES, speed, wait=True)
+        right_drive_2.spin_for(FORWARD, motor_degrees, DEGREES, speed, wait=True)
+    else:
+        left_drive_1.spin_for(FORWARD, motor_degrees, DEGREES, speed, wait=False)
+        left_drive_2.spin_for(FORWARD, motor_degrees, DEGREES, speed, wait=False)
+        right_drive_1.spin_for(REVERSE, motor_degrees, DEGREES, speed, wait=True)
+        right_drive_2.spin_for(REVERSE, motor_degrees, DEGREES, speed, wait=True)
+
+def run_conveyor_forward(duration_ms):
     conveyor_motor.spin(FORWARD, CONVEYOR_SPEED, PERCENT)
-    sleep(1000)  # Run conveyor for 1 second
+    sleep(duration_ms)
     conveyor_motor.stop()
-    piston1.open()
-    piston2.open()
-    sleep(500)
-    piston1.close()
-    piston2.close()
+
+def autonomous():
+    brain.screen.clear_screen()
+    brain.screen.print("autonomous mode started")
+
+    # rotate left 90 degrees
+    rotate_degrees(90, speed=50)
+    # move forward to colored wall stake
+    pid_drive(24)
+    # run conveyor to drop the ring
+    run_conveyor_forward(2000)
+
+    brain.screen.clear_screen()
+    brain.screen.print("autonomous routine complete")
 
 def drive_task():
     brain.screen.print("Driver control mode start")
