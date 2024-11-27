@@ -20,7 +20,8 @@ right_drive_1 = Motor(Ports.PORT3, GearSetting.RATIO_18_1, True)
 right_drive_2 = Motor(Ports.PORT4, GearSetting.RATIO_18_1, True)
 
 # Conveyor motor
-conveyor_motor = Motor(Ports.PORT5, GearSetting.RATIO_18_1, False)
+conveyor_motor1 = Motor(Ports.PORT5, GearSetting.RATIO_18_1, False)
+flag = Motor(Ports.PORT6, GearSetting.RATIO_18_1, False)
 
 # Pneumatic pistons connected to three-wire ports
 piston1 = Pneumatics(brain.three_wire_port.c)
@@ -32,6 +33,17 @@ KI = 0.01  # integral gain
 KD = 0.1  # derivative gain
 WHEEL_DIAMETER_INCHES = 4.0
 WHEEL_CIRCUMFERENCE_INCHES = math.pi * WHEEL_DIAMETER_INCHES
+# Flag motor positions
+FLAG_UP_POSITION = 90  # Angle in degrees for "up" position
+FLAG_DOWN_POSITION = 0  # Angle in degrees for "down" position
+
+flagup = False
+
+def toggle_flag_position(flagup=True):
+    if flagup:
+        flag.spin_to_position(FLAG_DOWN_POSITION, DEGREES, 50, PERCENT)
+    else:
+        flag.spin_to_position(FLAG_UP_POSITION, DEGREES, 50, PERCENT)
 
 def inches_to_degrees(target_distance_inches):
     return (target_distance_inches / WHEEL_CIRCUMFERENCE_INCHES) * 360
@@ -78,10 +90,10 @@ def pid_drive(target_distance_inches):
 
 def autonomous():
     # Move forward for 2 seconds
-    left_drive_1.spin(FORWARD, 50, PERCENT)
-    left_drive_2.spin(FORWARD, 50, PERCENT)
-    right_drive_1.spin(FORWARD, 50, PERCENT)
-    right_drive_2.spin(FORWARD, 50, PERCENT)
+    left_drive_1.spin(FORWARD, 35, PERCENT)
+    left_drive_2.spin(FORWARD, 35, PERCENT)
+    right_drive_1.spin(FORWARD, 35, PERCENT)
+    right_drive_2.spin(FORWARD, 35, PERCENT)
     sleep(2000)
 
     # Stop motors
@@ -90,13 +102,6 @@ def autonomous():
     right_drive_1.stop()
     right_drive_2.stop()
     sleep(500)
-
-    # Move backward for 2 seconds
-    left_drive_1.spin(REVERSE, 50, PERCENT)
-    left_drive_2.spin(REVERSE, 50, PERCENT)
-    right_drive_1.spin(REVERSE, 50, PERCENT)
-    right_drive_2.spin(REVERSE, 50, PERCENT)
-    sleep(2000)
 
     # Stop motors
     left_drive_1.stop()
@@ -116,6 +121,12 @@ def display_controls_summary():
     controller.screen.set_cursor(3, 1)
     controller.screen.print("R JOYSTICK")
 
+def openflag(isup=True):
+    if isup:
+        flag.spin(FORWARD, 50, PERCENT)
+    else:
+        flag.spin(REVERSE, 50, PERCENT)
+    
 def drive_task():
     brain.screen.print("Driver control mode started")
     display_controls_summary()
@@ -136,9 +147,9 @@ def drive_task():
         # Conveyor control using right joystick (vertical axis only)
         conveyor_speed = controller.axis2.position()
         if conveyor_speed != 0:
-            conveyor_motor.spin(FORWARD, conveyor_speed, PERCENT)
+            conveyor_motor1.spin(FORWARD, conveyor_speed, PERCENT)
         else:
-            conveyor_motor.stop()
+            conveyor_motor1.stop()
 
         # Pneumatic control using L1 and R1 buttons
         if controller.buttonL1.pressing():
@@ -149,6 +160,15 @@ def drive_task():
             piston1.open()
         elif controller.buttonL2.pressing():
             piston1.open()
+        
+        # Flag control
+        if controller.buttonUp.pressing():
+            toggle_flag_position()
+            sleep(300)  # Debounce delay
+        elif controller.buttonDown.pressing():
+            toggle_flag_position(False)
+            sleep(300)  # Debounce delay
+
         
         sleep(10)
 
