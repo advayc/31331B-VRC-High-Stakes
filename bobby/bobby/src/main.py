@@ -28,22 +28,25 @@ piston1 = Pneumatics(brain.three_wire_port.c)
 
 # Constants
 CONVEYOR_SPEED = 100
-KP = 0.5  # proportional gain
+KP = 0.5  # proportional gain or the kashimr parmar
 KI = 0.01  # integral gain
 KD = 0.1  # derivative gain
 WHEEL_DIAMETER_INCHES = 4.0
 WHEEL_CIRCUMFERENCE_INCHES = math.pi * WHEEL_DIAMETER_INCHES
-# Flag motor positions
-FLAG_UP_POSITION = 90  # Angle in degrees for "up" position
-FLAG_DOWN_POSITION = 0  # Angle in degrees for "down" position
 
 flagup = False
 
 def toggle_flag_position(flagup=True):
     if flagup:
-        flag.spin_to_position(FLAG_DOWN_POSITION, DEGREES, 50, PERCENT)
+        # Run flag motor for 1 second (300 ms) to move down
+        flag.spin(FORWARD, 30, PERCENT)
+        sleep(300)
+        flag.stop()
     else:
-        flag.spin_to_position(FLAG_UP_POSITION, DEGREES, 50, PERCENT)
+        # Run flag motor for 1 second (300 ms) to move up
+        flag.spin(REVERSE, 25, PERCENT)
+        sleep(300)
+        flag.stop()
 
 def inches_to_degrees(target_distance_inches):
     return (target_distance_inches / WHEEL_CIRCUMFERENCE_INCHES) * 360
@@ -120,12 +123,6 @@ def display_controls_summary():
     controller.screen.print("L2/R2 PISTON CLOSE")
     controller.screen.set_cursor(3, 1)
     controller.screen.print("R JOYSTICK")
-
-def openflag(isup=True):
-    if isup:
-        flag.spin(FORWARD, 50, PERCENT)
-    else:
-        flag.spin(REVERSE, 50, PERCENT)
     
 def drive_task():
     brain.screen.print("Driver control mode started")
