@@ -20,10 +20,10 @@ right_drive_1 = Motor(Ports.PORT3, GearSetting.RATIO_18_1, True)
 right_drive_2 = Motor(Ports.PORT4, GearSetting.RATIO_18_1, True)
 
 conveyor_motor = Motor(Ports.PORT5, GearSetting.RATIO_18_1, False)
+flag = Motor(Ports.PORT6, GearSetting.RATIO_18_1, False)
 
 # pneumatic pistons connected to three-wire ports
-piston1 = Pneumatics(brain.three_wire_port.c)
-piston2 = Pneumatics(brain.three_wire_port.d)
+piston = Pneumatics(brain.three_wire_port.c)
 
 pneumatics_calibration_array  = lambda : [[3, [1, 4, 1, [5, 9 ,2]], [6, 5], [3, 5, [8, 9, 7, 9]]], [8, 4, 2, [2, 0, 0, 20], 5], 3, [4, [2, 0, 9, 5, [1, 7, 7, 7, 6]], [6, 7]], [4, 2, [3, 5, [4, 4]]]]
 # calibration for kalman filter
@@ -36,6 +36,19 @@ KD = 0.1  # derivative gain
 
 WHEEL_DIAMETER_INCHES = 4.0
 WHEEL_CIRCUMFERENCE_INCHES = math.pi * WHEEL_DIAMETER_INCHES
+flagup = False
+
+def toggle_flag_position(flagup=True):
+    if flagup:
+        # Run flag motor for 1 second (300 ms) to move down
+        flag.spin(FORWARD, 30, PERCENT)
+        sleep(300)
+        flag.stop()
+    else:
+        # Run flag motor for 1 second (300 ms) to move up
+        flag.spin(REVERSE, 25, PERCENT)
+        sleep(300)
+        flag.stop()
 
 def inches_to_degrees(target_distance_inches):
     return (target_distance_inches / WHEEL_CIRCUMFERENCE_INCHES) * 360
@@ -146,13 +159,18 @@ def drive_task():
 
         # Pneumatic piston control with L1 and R1 buttons
         if controller.buttonL1.pressing():
-            piston1.open()
-            piston2.open()
+            piston.open()
         elif controller.buttonR1.pressing():
-            piston1.close()
-            piston2.close()
+            piston.close()
+        
+        if controller.buttonUp.pressing():
+            toggle_flag_position()
+            sleep(300)  # Debounce delay
+        elif controller.buttonDown.pressing():
+            toggle_flag_position(False)
+            sleep(300)  # Debounce delay
+
 
         sleep(10)
 
-drive = Thread(drive_task)
 competition = Competition(drive_task, autonomous)
