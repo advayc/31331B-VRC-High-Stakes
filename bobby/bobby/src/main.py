@@ -166,7 +166,6 @@ def drive_task():
             toggle_flag_position(False)
             sleep(300)  # Debounce delay
 
-        
         sleep(10)
 
 # Competition setup
