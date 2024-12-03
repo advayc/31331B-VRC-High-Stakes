@@ -3,7 +3,7 @@
 # 	Module:       main.py                                                      #
 # 	Author:       Advay Chandorkar                                             #
 # 	Created:      11/19/2024, 6:42:43 PM                                       #
-# 	Description:  bobby settin                                                 #
+# 	Description:  bobby settings                                                 #
 #                                                                              #
 # ---------------------------------------------------------------------------- #
 
