@@ -1,12 +1,13 @@
 # ---------------------------------------------------------------------------- #
 #                                                                              #
 # 	Module:       main.py                                                      #
-# 	Author:       Advay Chandorkar                                             #
-# 	Created:      11/19/2024, 6:42:43 PM                                       #
-# 	Description:  bobby settings                                                 #
+# 	Author:       Arghya Vyas and Advay Chandorkar                             #
+# 	Created:      12/3/2024, 6:24:37 PM                                        #
+# 	Description:  jjjjjjkjkj                                                   #
 #                                                                              #
 # ---------------------------------------------------------------------------- #
 
+# Library imports
 from vex import *
 import math
 
@@ -28,9 +29,6 @@ piston1 = Pneumatics(brain.three_wire_port.c)
 
 # Constants
 CONVEYOR_SPEED = 100
-KP = 0.5  # proportional gain or the kashimr parmar
-KI = 0.01  # integral gain
-KD = 0.1  # derivative gain
 WHEEL_DIAMETER_INCHES = 4.0
 WHEEL_CIRCUMFERENCE_INCHES = math.pi * WHEEL_DIAMETER_INCHES
 
@@ -49,22 +47,39 @@ def toggle_flag_position(flagup=True):
         flag.stop()
 
 def inches_to_degrees(target_distance_inches):
-    return (target_distance_inches / WHEEL_CIRCUMFERENCE_INCHES) * 360
+    # Correction factor to adjust for overshooting
+    CORRECTION_FACTOR = 1.5  # Robot travels 1.5x the intended distance
+    corrected_distance = target_distance_inches / CORRECTION_FACTOR
+    return (corrected_distance / WHEEL_CIRCUMFERENCE_INCHES) * 360
 
+def get_scaled_pid_constants(distance_inches):
+    """
+    Adjusts PID constants based on the distance to travel.
+    Returns scaled values of KP, KI, and KD.
+    """
+    if distance_inches > 24:  # Long distance
+        return 0.55, 0.015, 0.2  # Reduced Kp, slightly increased Kd
+    elif distance_inches > 12:  # Medium distance
+        return 0.45, 0.008, 0.12  # Reduced Kp, slightly increased Kd
+    else:  # Short distance
+        return 0.35, 0.004, 0.1  # Reduced Kp for greater precision
 def pid_drive(target_distance_inches):
     """
-    Drives the robot forward by a specified distance (in inches) using PID control.
+    Drives the robot forward by a specified distance (in inches) using dynamically tuned PID control.
     """
+    # Get scaled PID constants
+    KP, KI, KD = get_scaled_pid_constants(target_distance_inches)
+    
     # Convert target distance from inches to motor degrees
     target_degrees = inches_to_degrees(target_distance_inches)
     
     # Reset motor positions
-    left_drive_1.position(DEGREES)
-    right_drive_1.position(DEGREES)
+    left_drive_1.set_position(0, DEGREES)
+    right_drive_1.set_position(0, DEGREES)
     
     error_sum = 0
     last_error = 0
-    threshold = 5
+    threshold = 5  # Adjusted threshold for stopping accuracy
 
     # PID loop for driving
     while True:
@@ -74,10 +89,15 @@ def pid_drive(target_distance_inches):
         if abs(error) < threshold:
             break
 
-        error_sum += error
+        # Accumulate error with anti-windup
+        error_sum = max(min(error_sum + error, 1000), -1000)  
         derivative = error - last_error
         pid_output = (KP * error) + (KI * error_sum) + (KD * derivative)
 
+        # Cap the PID output to prevent excessive speeds
+        pid_output = max(min(pid_output, 80), -80)  # Lower max speed to reduce overshoot
+
+        # Spin motors with PID output
         left_drive_1.spin(FORWARD, pid_output, PERCENT)
         left_drive_2.spin(FORWARD, pid_output, PERCENT)
         right_drive_1.spin(FORWARD, pid_output, PERCENT)
@@ -86,31 +106,46 @@ def pid_drive(target_distance_inches):
         last_error = error
         sleep(20)
 
-    left_drive_1.stop()
-    left_drive_2.stop()
-    right_drive_1.stop()
-    right_drive_2.stop()
+    # Stop all motors with a brake
+    left_drive_1.stop(BRAKE)
+    left_drive_2.stop(BRAKE)
+    right_drive_1.stop(BRAKE)
+    right_drive_2.stop(BRAKE)
+def rotate_left():
+    """
+    Rotates the robot 90 degrees to the left using motor control.
+    Assumes a differential drive system with equal speeds on left and right sides.
+    """
+    # Constants for rotation
+    TURN_SPEED = 50  # Speed percentage for the turn
+    TURN_DURATION_MS = 350  # Adjust this based on your robot's turning behavior
+
+    # Spin motors to turn left
+    left_drive_1.spin(REVERSE, TURN_SPEED, PERCENT)
+    left_drive_2.spin(REVERSE, TURN_SPEED, PERCENT)
+    right_drive_1.spin(FORWARD, TURN_SPEED, PERCENT)
+    right_drive_2.spin(FORWARD, TURN_SPEED, PERCENT)
+
+    # Turn for a specified duration
+    sleep(TURN_DURATION_MS)
+
+    # Stop all motors with a brake
+    left_drive_1.stop(BRAKE)
+    left_drive_2.stop(BRAKE)
+    right_drive_1.stop(BRAKE)
+    right_drive_2.stop(BRAKE)
 
 def autonomous():
-    # Move forward for 2 seconds
-    left_drive_1.spin(FORWARD, 35, PERCENT)
-    left_drive_2.spin(FORWARD, 35, PERCENT)
-    right_drive_1.spin(FORWARD, 35, PERCENT)
-    right_drive_2.spin(FORWARD, 35, PERCENT)
-    sleep(2000)
-
-    # Stop motors
-    left_drive_1.stop()
-    left_drive_2.stop()
-    right_drive_1.stop()
-    right_drive_2.stop()
+    piston1.open()
+    pid_drive(32)   
+   # Pause
+    piston1.close()
     sleep(500)
-
-    # Stop motors
-    left_drive_1.stop()
-    left_drive_2.stop()
-    right_drive_1.stop()
-    right_drive_2.stop()
+    pid_drive(-6)
+    sleep(200)
+    conveyor_motor1.spin(FORWARD, CONVEYOR_SPEED, PERCENT)
+    pid_drive(-5)
+    rotate_left()
 
 def display_controls_summary():
     """
@@ -123,7 +158,7 @@ def display_controls_summary():
     controller.screen.print("L2/R2 PISTON CLOSE")
     controller.screen.set_cursor(3, 1)
     controller.screen.print("R JOYSTICK")
-    
+
 def drive_task():
     brain.screen.print("Driver control mode started")
     display_controls_summary()
