@@ -58,12 +58,11 @@ def get_scaled_pid_constants(distance_inches):
     Returns scaled values of KP, KI, and KD.
     """
     if distance_inches > 24:  # Long distance
-        return 0.6, 0.02, 0.15  # Larger KP for faster correction
+        return 0.55, 0.015, 0.2  # Reduced Kp, slightly increased Kd
     elif distance_inches > 12:  # Medium distance
-        return 0.5, 0.01, 0.1  # Balanced values
+        return 0.45, 0.008, 0.12  # Reduced Kp, slightly increased Kd
     else:  # Short distance
-        return 0.4, 0.005, 0.08  # Smaller KP for precision
-
+        return 0.35, 0.004, 0.1  # Reduced Kp for greater precision
 def pid_drive(target_distance_inches):
     """
     Drives the robot forward by a specified distance (in inches) using dynamically tuned PID control.
@@ -112,12 +111,41 @@ def pid_drive(target_distance_inches):
     left_drive_2.stop(BRAKE)
     right_drive_1.stop(BRAKE)
     right_drive_2.stop(BRAKE)
+def rotate_left():
+    """
+    Rotates the robot 90 degrees to the left using motor control.
+    Assumes a differential drive system with equal speeds on left and right sides.
+    """
+    # Constants for rotation
+    TURN_SPEED = 50  # Speed percentage for the turn
+    TURN_DURATION_MS = 350  # Adjust this based on your robot's turning behavior
+
+    # Spin motors to turn left
+    left_drive_1.spin(REVERSE, TURN_SPEED, PERCENT)
+    left_drive_2.spin(REVERSE, TURN_SPEED, PERCENT)
+    right_drive_1.spin(FORWARD, TURN_SPEED, PERCENT)
+    right_drive_2.spin(FORWARD, TURN_SPEED, PERCENT)
+
+    # Turn for a specified duration
+    sleep(TURN_DURATION_MS)
+
+    # Stop all motors with a brake
+    left_drive_1.stop(BRAKE)
+    left_drive_2.stop(BRAKE)
+    right_drive_1.stop(BRAKE)
+    right_drive_2.stop(BRAKE)
 
 def autonomous():
-    # Example autonomous logic using PID drive
-    pid_drive(12)  # Move forward 12 inches
-    sleep(500)     # Pause
-    pid_drive(6)   # Move forward 6 inches
+    piston1.open()
+    pid_drive(32)   
+   # Pause
+    piston1.close()
+    sleep(500)
+    pid_drive(-6)
+    sleep(200)
+    conveyor_motor1.spin(FORWARD, CONVEYOR_SPEED, PERCENT)
+    pid_drive(-5)
+    rotate_left()
 
 def display_controls_summary():
     """
@@ -130,7 +158,7 @@ def display_controls_summary():
     controller.screen.print("L2/R2 PISTON CLOSE")
     controller.screen.set_cursor(3, 1)
     controller.screen.print("R JOYSTICK")
-    
+
 def drive_task():
     brain.screen.print("Driver control mode started")
     display_controls_summary()
