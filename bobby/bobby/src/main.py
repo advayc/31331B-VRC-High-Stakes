@@ -3,14 +3,13 @@
 # 	Module:       main.py                                                      #
 # 	Author:       Arghya Vyas and Advay Chandorkar                             #
 # 	Created:      12/3/2024, 6:24:37 PM                                        #
-# 	Description:  bobby drive settings                                         #
+# 	Description:  Base Code For PID autonomous                                 #
 #                                                                              #
 # ---------------------------------------------------------------------------- #
 
 # Library imports
 from vex import *
 import math
-from visualization.auton_visualizer import AutonVisualizer
 
 brain = Brain()
 controller = Controller()
@@ -38,12 +37,12 @@ flagup = False
 def toggle_flag_position(flagup=True):
     if flagup:
         # Run flag motor for 1 second (300 ms) to move down
-        flag.spin(FORWARD, 30, PERCENT)
+        flag.spin(FORWARD, 60, PERCENT)
         sleep(300)
         flag.stop()
     else:
         # Run flag motor for 1 second (300 ms) to move up
-        flag.spin(REVERSE, 25, PERCENT)
+        flag.spin(REVERSE, 55, PERCENT)
         sleep(300)
         flag.stop()
 
@@ -96,7 +95,7 @@ def pid_drive(target_distance_inches):
         pid_output = (KP * error) + (KI * error_sum) + (KD * derivative)
 
         # Cap the PID output to prevent excessive speeds
-        pid_output = max(min(pid_output, 80), -80)  # Lower max speed to reduce overshoot
+        pid_output = max(min(pid_output, 75), -75)  # Lower max speed to reduce overshoot
 
         # Spin motors with PID output
         left_drive_1.spin(FORWARD, pid_output, PERCENT)
@@ -119,7 +118,30 @@ def rotate_left():
     """
     # Constants for rotation
     TURN_SPEED = 50  # Speed percentage for the turn
-    TURN_DURATION_MS = 350  # Adjust this based on your robot's turning behavior
+    TURN_DURATION_MS = 400  # Adjust this based on your robot's turning behavior
+
+    # Spin motors to turn left
+    left_drive_1.spin(FORWARD, TURN_SPEED, PERCENT)
+    left_drive_2.spin(FORWARD, TURN_SPEED, PERCENT)
+    right_drive_1.spin(REVERSE, TURN_SPEED, PERCENT)
+    right_drive_2.spin(REVERSE, TURN_SPEED, PERCENT)
+
+    # Turn for a specified duration
+    sleep(TURN_DURATION_MS)
+
+    # Stop all motors with a brake
+    left_drive_1.stop(BRAKE)
+    left_drive_2.stop(BRAKE)
+    right_drive_1.stop(BRAKE)
+    right_drive_2.stop(BRAKE)
+def rotate_right():
+    """
+    Rotates the robot 90 degrees to the left using motor control.
+    Assumes a differential drive system with equal speeds on left and right sides.
+    """
+    # Constants for rotation
+    TURN_SPEED = 50  # Speed percentage for the turn
+    TURN_DURATION_MS = 420  # Adjust this based on your robot's turning behavior
 
     # Spin motors to turn left
     left_drive_1.spin(REVERSE, TURN_SPEED, PERCENT)
@@ -136,18 +158,11 @@ def rotate_left():
     right_drive_1.stop(BRAKE)
     right_drive_2.stop(BRAKE)
 
+
 def autonomous():
     piston1.open()
     pid_drive(32)   
-   # Pause
-    piston1.close()
-    sleep(500)
-    pid_drive(-6)
-    sleep(200)
-    conveyor_motor1.spin(FORWARD, CONVEYOR_SPEED, PERCENT)
-    pid_drive(-5)
-    rotate_left()
-
+   
 def display_controls_summary():
     """
     Displays a summary of controls on the controller screen.
