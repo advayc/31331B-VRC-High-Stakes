@@ -13,13 +13,13 @@ class AutonVisualizer:
         self.robot_width = 14  # inches
         self.robot_length = 18  # inches
         
-        # Setup plot
-        self.fig, self.ax = plt.subplots(figsize=(12, 12))
+        # Setup smaller plot
+        self.fig, self.ax = plt.subplots(figsize=(8, 8))  # Smaller figure size
         self.ax.set_xlim(0, field_size[0])
         self.ax.set_ylim(0, field_size[1])
         
         # Load and display field image
-        script_dir = os.path.dirname(__file__)  # Get the directory where the script is located
+        script_dir = os.path.dirname(__file__)
         image_path = os.path.join(script_dir, 'TopView.png')
         try:
             self.field_img = mpimg.imread(image_path)
@@ -28,53 +28,65 @@ class AutonVisualizer:
             print(f"Warning: {image_path} not found. Using grid background.")
             self.ax.grid(True)
         
-        # Robot state
+        # Initialize robot state and path tracking
         self.robot_x = field_size[0]/2
-        self.robot_y = 20  # Starting position
-        self.robot_angle = 0  # degrees
-        
-        # System states
-        self.piston_state = "closed"
-        self.conveyor_running = False
-        
-        # Path tracking
+        self.robot_y = 20
+        self.robot_angle = 0
         self.path_x = [self.robot_x]
         self.path_y = [self.robot_y]
-        self.events = []  # To track piston and conveyor events
+        self.events = []
         
-        # Create robot patch
-        self.robot_patch = Rectangle(
-            (self.robot_x - self.robot_width/2, self.robot_y - self.robot_length/2),
-            self.robot_width, self.robot_length,
-            angle=self.robot_angle,
-            facecolor='red',
-            alpha=0.7
-        )
+        # Initialize system states
+        self.piston_state = "closed"
+        self.conveyor_running = False  # Initialize the conveyor state
+        
+        # Create robot and direction indicator
+        self.robot_patch = Rectangle((self.robot_x - self.robot_width/2, self.robot_y - self.robot_length/2),
+                                     self.robot_width, self.robot_length, angle=self.robot_angle, facecolor='red', alpha=0.7)
         self.ax.add_patch(self.robot_patch)
-        
-        # Add direction indicator (front of robot)
-        self.direction_indicator = Circle(
-            (self.robot_x, self.robot_y + self.robot_length/4),
-            radius=2,
-            color='green'
-        )
+        self.direction_indicator = Circle((self.robot_x, self.robot_y + self.robot_length/4), radius=2, color='green')
         self.ax.add_patch(self.direction_indicator)
         
-        # Path line
+        # Path line and status text
         self.path_line, = self.ax.plot([], [], 'b-', linewidth=2, alpha=0.5)
-        
-        # Status text
         self.status_text = self.ax.text(5, field_size[1]-10, '', fontsize=10, color='white', bbox=dict(facecolor='black', alpha=0.7))
         
-        # Add indicators for piston and conveyor outside the plot
+        # Indicators and buttons
         self.piston_indicator = self.ax.text(150, 160, 'Piston: Closed', fontsize=12, color='red')
         self.conveyor_indicator = self.ax.text(150, 150, 'Conveyor: Off', fontsize=12, color='blue')
+        self.setup_buttons()
 
-        # Button for resetting the visualization
-        self.reset_ax = plt.axes([0.7, 0.05, 0.1, 0.075])
+    def setup_buttons(self):
+        # Button positions and functionality
+        self.reset_ax = plt.axes([0.7, 0.01, 0.1, 0.05])
         self.reset_button = Button(self.reset_ax, 'Reset')
         self.reset_button.on_clicked(self.reset_visualization)
-        
+
+        self.start_ax = plt.axes([0.59, 0.01, 0.1, 0.05])
+        self.start_button = Button(self.start_ax, 'Start')
+        self.start_button.on_clicked(self.start_animation)
+
+        self.stop_ax = plt.axes([0.48, 0.01, 0.1, 0.05])
+        self.stop_button = Button(self.stop_ax, 'Stop')
+        self.stop_button.on_clicked(self.stop_animation)
+
+    def start_animation(self, event):
+        self.anim = FuncAnimation(self.fig, self.update_animation, frames=len(self.path_x), interval=5, blit=True)
+        plt.show()
+
+    def stop_animation(self, event):
+        self.anim.event_source.stop()
+
+    def reset_visualization(self, event):
+        self.set_start_position(self.field_size[0]/2, 20, 0)
+        self.path_x = [self.robot_x]
+        self.path_y = [self.robot_y]
+        self.events = []
+        self.piston_indicator.set_text('Piston: Closed')
+        self.conveyor_indicator.set_text('Conveyor: Off')
+        self.path_line.set_data([], [])
+        plt.draw()
+
     def set_start_position(self, x, y, angle=0):
         """Set the starting position and angle of the robot"""
         self.robot_x = x
@@ -192,17 +204,6 @@ class AutonVisualizer:
         plt.xlabel("Field X (inches)")
         plt.ylabel("Field Y (inches)")
         plt.show()
-
-    def reset_visualization(self, event):
-        """Reset the visualization to the initial state."""
-        self.set_start_position(self.field_size[0]/2, 20, 0)
-        self.path_x = [self.robot_x]
-        self.path_y = [self.robot_y]
-        self.events = []
-        self.piston_indicator.set_text('Piston: Closed')
-        self.conveyor_indicator.set_text('Conveyor: Off')
-        self.path_line.set_data([], [])
-        plt.draw()
 
 def match_auton(robot):
     """Recreation of your autonomous routine"""
