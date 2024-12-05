@@ -44,7 +44,7 @@ class AutonVisualizer:
         self.robot_patch = Rectangle((self.robot_x - self.robot_width/2, self.robot_y - self.robot_length/2),
                                      self.robot_width, self.robot_length, angle=self.robot_angle, facecolor='red', alpha=0.7)
         self.ax.add_patch(self.robot_patch)
-        self.direction_indicator = Circle((self.robot_x, self.robot_y + self.robot_length/4), radius=2, color='green')
+        self.direction_indicator = Circle((self.robot_x, self.robot_y), radius=1, color='green')  # Keep inside robot
         self.ax.add_patch(self.direction_indicator)
         
         # Path line and status text
@@ -72,15 +72,27 @@ class AutonVisualizer:
     def setup_textboxes(self):
         # Textboxes for inputting starting position and angle
         self.x_textbox_ax = plt.axes([0.1, 0.9, 0.1, 0.05])  # Moved up
-        self.x_textbox = TextBox(self.x_textbox_ax, 'X', initial=str(self.robot_x))
+        self.x_textbox = TextBox(self.x_textbox_ax, '', initial=str(self.robot_x))
+        self.x_textbox.label.set_text('X')
+        self.x_textbox.label.set_position((0.5, 1.2))  # Position label above
+        self.x_textbox.label.set_fontsize(10)
+        self.x_textbox.label.set_color('black')
         self.x_textbox.on_submit(self.update_start_x)
 
         self.y_textbox_ax = plt.axes([0.21, 0.9, 0.1, 0.05])  # Moved up
-        self.y_textbox = TextBox(self.y_textbox_ax, 'Y', initial=str(self.robot_y))
+        self.y_textbox = TextBox(self.y_textbox_ax, '', initial=str(self.robot_y))
+        self.y_textbox.label.set_text('Y')
+        self.y_textbox.label.set_position((0.5, 1.2))  # Position label above
+        self.y_textbox.label.set_fontsize(10)
+        self.y_textbox.label.set_color('black')
         self.y_textbox.on_submit(self.update_start_y)
 
         self.angle_textbox_ax = plt.axes([0.32, 0.9, 0.1, 0.05])  # Moved up
-        self.angle_textbox = TextBox(self.angle_textbox_ax, 'Angle', initial=str(self.robot_angle))
+        self.angle_textbox = TextBox(self.angle_textbox_ax, '', initial=str(self.robot_angle))
+        self.angle_textbox.label.set_text('θ')
+        self.angle_textbox.label.set_position((0.5, 1.2))  # Position label above
+        self.angle_textbox.label.set_fontsize(10)
+        self.angle_textbox.label.set_color('black')
         self.angle_textbox.on_submit(self.update_start_angle)
 
     def update_start_x(self, text):
@@ -193,10 +205,7 @@ class AutonVisualizer:
             self.robot_patch.angle = -self.robot_angle
             
             # Update direction indicator
-            angle_rad = math.radians(self.robot_angle)
-            indicator_x = x + (self.robot_length/4) * math.sin(angle_rad)
-            indicator_y = y + (self.robot_length/4) * math.cos(angle_rad)
-            self.direction_indicator.center = (indicator_x, indicator_y)
+            self.direction_indicator.center = (x, y)  # Keep inside robot
             
             # Update path
             self.path_line.set_data(self.path_x[:frame+1], self.path_y[:frame+1])
