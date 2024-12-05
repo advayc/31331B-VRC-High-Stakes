@@ -3,13 +3,14 @@
 # 	Module:       main.py                                                      #
 # 	Author:       Arghya Vyas and Advay Chandorkar                             #
 # 	Created:      12/3/2024, 6:24:37 PM                                        #
-# 	Description:  jjjjjjkjkj                                                   #
+# 	Description:  bobby drive settings                                         #
 #                                                                              #
 # ---------------------------------------------------------------------------- #
 
 # Library imports
 from vex import *
 import math
+from visualization.auton_visualizer import AutonVisualizer
 
 brain = Brain()
 controller = Controller()
