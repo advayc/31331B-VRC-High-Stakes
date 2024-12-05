@@ -57,56 +57,53 @@ class AutonVisualizer:
 
     def setup_buttons(self):
         # Button positions and functionality
-        self.reset_ax = plt.axes([0.7, 0.9, 0.1, 0.05])  # Moved to top
+        self.reset_ax = plt.axes([0.75, 0.9, 0.1, 0.05])  # Moved up and to the right
         self.reset_button = Button(self.reset_ax, 'Reset')
         self.reset_button.on_clicked(self.reset_visualization)
 
-        self.start_ax = plt.axes([0.59, 0.9, 0.1, 0.05])  # Moved to top
+        self.start_ax = plt.axes([0.64, 0.9, 0.1, 0.05])  # Moved up and to the right
         self.start_button = Button(self.start_ax, 'Start')
         self.start_button.on_clicked(self.start_animation)
 
-        self.stop_ax = plt.axes([0.48, 0.9, 0.1, 0.05])  # Moved to top
+        self.stop_ax = plt.axes([0.53, 0.9, 0.1, 0.05])  # Moved up and to the right
         self.stop_button = Button(self.stop_ax, 'Stop')
         self.stop_button.on_clicked(self.stop_animation)
 
     def setup_textboxes(self):
         # Textboxes for inputting starting position and angle
-        self.x_textbox_ax = plt.axes([0.1, 0.9, 0.1, 0.05])  # Moved to top
+        self.x_textbox_ax = plt.axes([0.1, 0.9, 0.1, 0.05])  # Moved up
         self.x_textbox = TextBox(self.x_textbox_ax, 'X', initial=str(self.robot_x))
         self.x_textbox.on_submit(self.update_start_x)
 
-        self.y_textbox_ax = plt.axes([0.21, 0.9, 0.1, 0.05])  # Moved to top
+        self.y_textbox_ax = plt.axes([0.21, 0.9, 0.1, 0.05])  # Moved up
         self.y_textbox = TextBox(self.y_textbox_ax, 'Y', initial=str(self.robot_y))
         self.y_textbox.on_submit(self.update_start_y)
 
-        self.angle_textbox_ax = plt.axes([0.32, 0.9, 0.1, 0.05])  # Moved to top
+        self.angle_textbox_ax = plt.axes([0.32, 0.9, 0.1, 0.05])  # Moved up
         self.angle_textbox = TextBox(self.angle_textbox_ax, 'Angle', initial=str(self.robot_angle))
         self.angle_textbox.on_submit(self.update_start_angle)
 
     def update_start_x(self, text):
         try:
             self.robot_x = float(text)
-            self.reset_visualization(None)
         except ValueError:
             print("Invalid input for X position.")
 
     def update_start_y(self, text):
         try:
             self.robot_y = float(text)
-            self.reset_visualization(None)
         except ValueError:
             print("Invalid input for Y position.")
 
     def update_start_angle(self, text):
         try:
             self.robot_angle = float(text)
-            self.reset_visualization(None)
         except ValueError:
             print("Invalid input for angle.")
 
     def start_animation(self, event):
-        self.anim = FuncAnimation(self.fig, self.update_animation, frames=len(self.path_x), interval=5, blit=True)
-        plt.show()
+        self.reset_visualization(None)  # Reset visualization with new start position
+        self.run_auton(match_auton)
 
     def stop_animation(self, event):
         if hasattr(self, 'anim'):
@@ -245,6 +242,4 @@ def match_auton(robot):
 if __name__ == "__main__":
     # Create visualizer
     viz = AutonVisualizer()
-    
-    # Run and visualize the autonomous routine
     viz.run_auton(match_auton)
