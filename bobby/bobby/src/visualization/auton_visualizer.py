@@ -5,7 +5,7 @@ from matplotlib.animation import FuncAnimation
 from matplotlib.patches import Rectangle, Circle
 import matplotlib.image as mpimg
 import os
-from matplotlib.widgets import Button
+from matplotlib.widgets import Button, TextBox
 
 class AutonVisualizer:
     def __init__(self, field_size=(144, 144)):  # Field size in inches
@@ -13,8 +13,8 @@ class AutonVisualizer:
         self.robot_width = 14  # inches
         self.robot_length = 18  # inches
         
-        # Setup smaller plot
-        self.fig, self.ax = plt.subplots(figsize=(8, 8))  # Smaller figure size
+        # Setup plot with smaller size
+        self.fig, self.ax = plt.subplots(figsize=(8, 6))  # Smaller figure size
         self.ax.set_xlim(0, field_size[0])
         self.ax.set_ylim(0, field_size[1])
         
@@ -38,7 +38,7 @@ class AutonVisualizer:
         
         # Initialize system states
         self.piston_state = "closed"
-        self.conveyor_running = False  # Initialize the conveyor state
+        self.conveyor_running = False
         
         # Create robot and direction indicator
         self.robot_patch = Rectangle((self.robot_x - self.robot_width/2, self.robot_y - self.robot_length/2),
@@ -51,39 +51,72 @@ class AutonVisualizer:
         self.path_line, = self.ax.plot([], [], 'b-', linewidth=2, alpha=0.5)
         self.status_text = self.ax.text(5, field_size[1]-10, '', fontsize=10, color='white', bbox=dict(facecolor='black', alpha=0.7))
         
-        # Indicators and buttons
-        self.piston_indicator = self.ax.text(150, 160, 'Piston: Closed', fontsize=12, color='red')
-        self.conveyor_indicator = self.ax.text(150, 150, 'Conveyor: Off', fontsize=12, color='blue')
+        # Setup buttons and textboxes
         self.setup_buttons()
+        self.setup_textboxes()
 
     def setup_buttons(self):
         # Button positions and functionality
-        self.reset_ax = plt.axes([0.7, 0.01, 0.1, 0.05])
+        self.reset_ax = plt.axes([0.7, 0.9, 0.1, 0.05])  # Moved to top
         self.reset_button = Button(self.reset_ax, 'Reset')
         self.reset_button.on_clicked(self.reset_visualization)
 
-        self.start_ax = plt.axes([0.59, 0.01, 0.1, 0.05])
+        self.start_ax = plt.axes([0.59, 0.9, 0.1, 0.05])  # Moved to top
         self.start_button = Button(self.start_ax, 'Start')
         self.start_button.on_clicked(self.start_animation)
 
-        self.stop_ax = plt.axes([0.48, 0.01, 0.1, 0.05])
+        self.stop_ax = plt.axes([0.48, 0.9, 0.1, 0.05])  # Moved to top
         self.stop_button = Button(self.stop_ax, 'Stop')
         self.stop_button.on_clicked(self.stop_animation)
+
+    def setup_textboxes(self):
+        # Textboxes for inputting starting position and angle
+        self.x_textbox_ax = plt.axes([0.1, 0.9, 0.1, 0.05])  # Moved to top
+        self.x_textbox = TextBox(self.x_textbox_ax, 'X', initial=str(self.robot_x))
+        self.x_textbox.on_submit(self.update_start_x)
+
+        self.y_textbox_ax = plt.axes([0.21, 0.9, 0.1, 0.05])  # Moved to top
+        self.y_textbox = TextBox(self.y_textbox_ax, 'Y', initial=str(self.robot_y))
+        self.y_textbox.on_submit(self.update_start_y)
+
+        self.angle_textbox_ax = plt.axes([0.32, 0.9, 0.1, 0.05])  # Moved to top
+        self.angle_textbox = TextBox(self.angle_textbox_ax, 'Angle', initial=str(self.robot_angle))
+        self.angle_textbox.on_submit(self.update_start_angle)
+
+    def update_start_x(self, text):
+        try:
+            self.robot_x = float(text)
+            self.reset_visualization(None)
+        except ValueError:
+            print("Invalid input for X position.")
+
+    def update_start_y(self, text):
+        try:
+            self.robot_y = float(text)
+            self.reset_visualization(None)
+        except ValueError:
+            print("Invalid input for Y position.")
+
+    def update_start_angle(self, text):
+        try:
+            self.robot_angle = float(text)
+            self.reset_visualization(None)
+        except ValueError:
+            print("Invalid input for angle.")
 
     def start_animation(self, event):
         self.anim = FuncAnimation(self.fig, self.update_animation, frames=len(self.path_x), interval=5, blit=True)
         plt.show()
 
     def stop_animation(self, event):
-        self.anim.event_source.stop()
+        if hasattr(self, 'anim'):
+            self.anim.event_source.stop()
 
     def reset_visualization(self, event):
-        self.set_start_position(self.field_size[0]/2, 20, 0)
+        self.set_start_position(self.robot_x, self.robot_y, self.robot_angle)
         self.path_x = [self.robot_x]
         self.path_y = [self.robot_y]
         self.events = []
-        self.piston_indicator.set_text('Piston: Closed')
-        self.conveyor_indicator.set_text('Conveyor: Off')
         self.path_line.set_data([], [])
         plt.draw()
 
@@ -135,25 +168,21 @@ class AutonVisualizer:
         """Simulate opening the piston."""
         self.piston_state = "open"
         print("Piston opened.")
-        self.piston_indicator.set_text('Piston: Open')
 
     def piston_close(self):
         """Simulate closing the piston."""
         self.piston_state = "closed"
         print("Piston closed.")
-        self.piston_indicator.set_text('Piston: Closed')
 
     def conveyor_start(self):
         """Simulate starting the conveyor."""
         self.conveyor_running = True
         print("Conveyor started.")
-        self.conveyor_indicator.set_text('Conveyor: On')
 
     def conveyor_stop(self):
         """Simulate stopping the conveyor."""
         self.conveyor_running = False
         print("Conveyor stopped.")
-        self.conveyor_indicator.set_text('Conveyor: Off')
         
     def update_animation(self, frame):
         """Update function for animation"""
@@ -193,16 +222,13 @@ class AutonVisualizer:
         routine_func(self)
         
         # Create animation
-        anim = FuncAnimation(
+        self.anim = FuncAnimation(
             self.fig, self.update_animation,
             frames=len(self.path_x),
             interval=5,  # Reduced interval for smoother animation
             blit=True
         )
         
-        plt.title("Robot Autonomous Path Visualization")
-        plt.xlabel("Field X (inches)")
-        plt.ylabel("Field Y (inches)")
         plt.show()
 
 def match_auton(robot):
@@ -219,12 +245,6 @@ def match_auton(robot):
 if __name__ == "__main__":
     # Create visualizer
     viz = AutonVisualizer()
-    
-    # You can set custom starting position and orientation here
-    # viz.set_start_position(x, y, angle)
-    # x, y: position in inches from bottom-left corner
-    # angle: degrees (0 = facing up, 90 = facing right, etc.)
-    viz.set_start_position(72, 20, 0)
     
     # Run and visualize the autonomous routine
     viz.run_auton(match_auton)
