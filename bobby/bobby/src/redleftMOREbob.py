@@ -3,7 +3,7 @@
 # 	Module:       main.py                                                      #
 # 	Author:       Arghya Vyas and Advay Chandorkar                             #
 # 	Created:      12/3/2024, 6:24:37 PM                                        #
-# 	Description:  Autonomous for the left red alliance side                    #
+# 	Description:  V5 project                                                   #
 #                                                                              #
 # ---------------------------------------------------------------------------- #
 
@@ -22,7 +22,7 @@ right_drive_2 = Motor(Ports.PORT4, GearSetting.RATIO_18_1, True)
 
 # Conveyor motor
 conveyor_motor1 = Motor(Ports.PORT5, GearSetting.RATIO_18_1, False)
-flag = Motor(Ports.PORT6, GearSetting.RATIO_18_1, False)
+flag = Motor(Ports.PORT6, GearSetting.RATIO_36_1, False)
 
 # Pneumatic pistons connected to three-wire ports
 piston1 = Pneumatics(brain.three_wire_port.c)
@@ -37,12 +37,12 @@ flagup = False
 def toggle_flag_position(flagup=True):
     if flagup:
         # Run flag motor for 1 second (300 ms) to move down
-        flag.spin(FORWARD, 30, PERCENT)
+        flag.spin(FORWARD, 80, PERCENT)
         sleep(300)
         flag.stop()
     else:
         # Run flag motor for 1 second (300 ms) to move up
-        flag.spin(REVERSE, 25, PERCENT)
+        flag.spin(REVERSE, 80, PERCENT)
         sleep(300)
         flag.stop()
 
@@ -161,9 +161,9 @@ def rotate_right():
 
 def autonomous():
     piston1.open()
-    pid_drive(31.6)   
+    pid_drive(32.5)   
     piston1.close()
-    sleep(500)
+    """sleep(500)"""
     pid_drive(-6)
     sleep(200)
     conveyor_motor1.spin(FORWARD, CONVEYOR_SPEED, PERCENT)
