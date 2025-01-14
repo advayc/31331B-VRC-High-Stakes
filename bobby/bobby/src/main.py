@@ -1,9 +1,10 @@
 # ---------------------------------------------------------------------------- #
 #                                                                              #
-# 	Module:       main.py                                                      #
-# 	Author:       Arghya Vyas and Advay Chandorkar                             #
-# 	Created:      12/3/2024, 6:24:37 PM                                        #
-# 	Description:  Base Code For PID autonomous                                 #
+#  Module:       main.py                                                      #
+#  Author:       Arghya Vyas and Advay Chandorkar                             #
+#  Created:      12/3/2024, 6:24:37 PM                                        #
+#  Description:  PID autonomous with touchscreen autonomous selection and     #
+#                motor temperature monitoring.                                #
 #                                                                              #
 # ---------------------------------------------------------------------------- #
 
@@ -11,6 +12,7 @@
 from vex import *
 import math
 
+# Initialize the brain and controller
 brain = Brain()
 controller = Controller()
 
@@ -22,30 +24,18 @@ right_drive_2 = Motor(Ports.PORT4, GearSetting.RATIO_18_1, True)
 
 # Conveyor motor
 conveyor_motor1 = Motor(Ports.PORT5, GearSetting.RATIO_18_1, False)
-flag = Motor(Ports.PORT6, GearSetting.RATIO_18_1, False)
 
-# Pneumatic pistons connected to three-wire ports
+# Pneumatic piston connected to three-wire ports
 piston1 = Pneumatics(brain.three_wire_port.c)
 
 # Constants
 CONVEYOR_SPEED = 100
 WHEEL_DIAMETER_INCHES = 4.0
 WHEEL_CIRCUMFERENCE_INCHES = math.pi * WHEEL_DIAMETER_INCHES
+TEMP_WARNING_THRESHOLD = 50  # Temperature threshold in Celsius
+TEMP_CRITICAL_THRESHOLD = 55  # Critical overheating threshold
 
-flagup = False
-
-def toggle_flag_position(flagup=True):
-    if flagup:
-        # Run flag motor for 1 second (300 ms) to move down
-        flag.spin(FORWARD, 60, PERCENT)
-        sleep(300)
-        flag.stop()
-    else:
-        # Run flag motor for 1 second (300 ms) to move up
-        flag.spin(REVERSE, 55, PERCENT)
-        sleep(300)
-        flag.stop()
-
+# Helper Functions
 def inches_to_degrees(target_distance_inches):
     # Correction factor to adjust for overshooting
     CORRECTION_FACTOR = 1.5  # Robot travels 1.5x the intended distance
@@ -63,6 +53,7 @@ def get_scaled_pid_constants(distance_inches):
         return 0.45, 0.008, 0.12  # Reduced Kp, slightly increased Kd
     else:  # Short distance
         return 0.35, 0.004, 0.1  # Reduced Kp for greater precision
+    
 def pid_drive(target_distance_inches):
     """
     Drives the robot forward by a specified distance (in inches) using dynamically tuned PID control.
@@ -111,6 +102,7 @@ def pid_drive(target_distance_inches):
     left_drive_2.stop(BRAKE)
     right_drive_1.stop(BRAKE)
     right_drive_2.stop(BRAKE)
+
 def rotate_left():
     """
     Rotates the robot 90 degrees to the left using motor control.
@@ -134,6 +126,7 @@ def rotate_left():
     left_drive_2.stop(BRAKE)
     right_drive_1.stop(BRAKE)
     right_drive_2.stop(BRAKE)
+    
 def rotate_right():
     """
     Rotates the robot 90 degrees to the left using motor control.
@@ -158,27 +151,86 @@ def rotate_right():
     right_drive_1.stop(BRAKE)
     right_drive_2.stop(BRAKE)
 
+def display_motor_temperatures():
+    """
+    Continuously displays motor temperatures on the brain screen and warns on the controller.
+    """
+    while True:
+        brain.screen.clear_screen()
+        temperatures = [
+            left_drive_1.temperature(CELSIUS),
+            left_drive_2.temperature(CELSIUS),
+            right_drive_1.temperature(CELSIUS),
+            right_drive_2.temperature(CELSIUS),
+        ]
 
-def autonomous():
+        for i, temp in enumerate(temperatures):
+            brain.screen.set_cursor(i + 1, 1)
+            brain.screen.print(f"Motor {i + 1}: {temp:.1f}C")
+
+        if any(temp >= TEMP_WARNING_THRESHOLD for temp in temperatures):
+            controller.screen.clear_screen()
+            controller.screen.set_cursor(1, 1)
+            controller.screen.print("WARNING: MOTOR HOT!")
+
+        sleep(500)
+
+def select_autonomous():
+    """
+    Allows the user to select an autonomous routine via the brain's touchscreen.
+    """
+    brain.screen.clear_screen()
+    brain.screen.set_cursor(1, 1)
+    brain.screen.print("Select Autonomous:")
+
+    # Draw buttons for selection
+    brain.screen.draw_rectangle(10, 40, 200, 40)
+    brain.screen.set_cursor(3, 5)
+    brain.screen.print("Red Left Corner")
+
+    brain.screen.draw_rectangle(10, 100, 200, 40)
+    brain.screen.set_cursor(5, 5)
+    brain.screen.print("Red Right Corner")
+
+    # Wait for user to tap a button
+    while True:
+        if brain.screen.pressing():
+            x, y = brain.screen.x_position(), brain.screen.y_position()
+            if 10 <= x <= 210 and 40 <= y <= 80:
+                return "red_left"
+            elif 10 <= x <= 210 and 100 <= y <= 140:
+                return "red_right"
+
+def red_left_negative_corner():
     piston1.open()
-    pid_drive(32)   
-   
-def display_controls_summary():
-    """
-    Displays a summary of controls on the controller screen.
-    """
-    controller.screen.clear_screen()
-    controller.screen.set_cursor(1, 1)
-    controller.screen.print("L1/R1 PISTON OPEN")
-    controller.screen.set_cursor(2, 1)
-    controller.screen.print("L2/R2 PISTON CLOSE")
-    controller.screen.set_cursor(3, 1)
-    controller.screen.print("R JOYSTICK")
+    pid_drive(32.5)
+    piston1.close()
+    pid_drive(-6)
+    conveyor_motor1.spin(FORWARD, CONVEYOR_SPEED, PERCENT)
+    sleep(200)
+    conveyor_motor1.stop()
+    pid_drive(-30)
+
+def red_right_positive_corner():
+    piston1.open()
+    pid_drive(32)
+    piston1.close()
+    pid_drive(-6)
+    conveyor_motor1.spin(FORWARD, CONVEYOR_SPEED, PERCENT)
+    sleep(200)
+    conveyor_motor1.stop()
+    pid_drive(-30)
+
+# Autonomous entry point
+def autonomous():
+    selected_auton = select_autonomous()
+
+    if selected_auton == "red_left":
+        red_left_negative_corner()
+    elif selected_auton == "red_right":
+        red_right_positive_corner()
 
 def drive_task():
-    brain.screen.print("Driver control mode started")
-    display_controls_summary()
-    sleep(1000)
 
     while True:
         forward = controller.axis3.position()  # Forward/backward control
@@ -209,14 +261,6 @@ def drive_task():
         elif controller.buttonL2.pressing():
             piston1.open()
         
-        # Flag control
-        if controller.buttonUp.pressing():
-            toggle_flag_position()
-            sleep(300)  # Debounce delay
-        elif controller.buttonDown.pressing():
-            toggle_flag_position(False)
-            sleep(300)  # Debounce delay
-
         sleep(10)
 
 # Competition setup

@@ -173,6 +173,7 @@ def autonomous():
     pid_drive(1)
     rotate_right()
     pid_drive(-30)
+    
 def display_controls_summary():
     """
     Displays a summary of controls on the controller screen.
