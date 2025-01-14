@@ -180,26 +180,43 @@ def select_autonomous():
     Allows the user to select an autonomous routine via the brain's touchscreen.
     """
     brain.screen.clear_screen()
-    brain.screen.set_cursor(1, 1)
-    brain.screen.print("Select Autonomous:")
 
-    # Draw buttons for selection
-    brain.screen.draw_rectangle(10, 40, 200, 40)
-    brain.screen.set_cursor(3, 5)
-    brain.screen.print("Red Left Corner")
+    # Set a background color
+    brain.screen.set_fill_color(Color.BLACK)
+    brain.screen.draw_rectangle(0, 0, 480, 240)
 
-    brain.screen.draw_rectangle(10, 100, 200, 40)
-    brain.screen.set_cursor(5, 5)
-    brain.screen.print("Red Right Corner")
+    # Set common properties for buttons
+    button_width, button_height = 220, 60
+    button_spacing = 20
 
-    # Wait for user to tap a button
+    # Button positions
+    button_x = (480 - button_width) // 2
+    red_left_y = 50
+    red_right_y = red_left_y + button_height + button_spacing
+
+    # Draw buttons
+    brain.screen.set_fill_color(Color.RED)
+    brain.screen.draw_rectangle(button_x, red_left_y, button_width, button_height)
+    brain.screen.set_fill_color(Color.RED)
+    brain.screen.draw_rectangle(button_x, red_right_y, button_width, button_height)
+
+    # Add button labels
+    brain.screen.set_pen_color(Color.WHITE)
+    brain.screen.set_cursor(3, 8)
+    brain.screen.print("RED LEFT CORNER")
+    brain.screen.set_cursor(6, 8)
+    brain.screen.print("RED RIGHT CORNER")
+
+    # Wait for user to select a button
     while True:
         if brain.screen.pressing():
             x, y = brain.screen.x_position(), brain.screen.y_position()
-            if 10 <= x <= 210 and 40 <= y <= 80:
-                return "red_left"
-            elif 10 <= x <= 210 and 100 <= y <= 140:
-                return "red_right"
+
+            if button_x <= x <= button_x + button_width:
+                if red_left_y <= y <= red_left_y + button_height:
+                    return "red_left"
+                elif red_right_y <= y <= red_right_y + button_height:
+                    return "red_right"
 
 def red_left_negative_corner():
     piston1.open()
