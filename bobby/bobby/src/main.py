@@ -35,6 +35,10 @@ WHEEL_CIRCUMFERENCE_INCHES = math.pi * WHEEL_DIAMETER_INCHES
 TEMP_WARNING_THRESHOLD = 50  # Temperature threshold in Celsius
 TEMP_CRITICAL_THRESHOLD = 55  # Critical overheating threshold
 
+# Variables
+selected_auton = None  # Stores the selected autonomous routine
+
+# Helper Functions
 # Helper Functions
 def inches_to_degrees(target_distance_inches):
     # Correction factor to adjust for overshooting
@@ -151,23 +155,78 @@ def rotate_right():
     right_drive_1.stop(BRAKE)
     right_drive_2.stop(BRAKE)
 
+
+def select_autonomous():
+    """
+    Displays an improved autonomous selection screen on the Brain with options for red and blue, left and right.
+    """
+    brain.screen.clear_screen()
+    brain.screen.set_fill_color(Color.BLACK)
+    brain.screen.draw_rectangle(0, 0, 480, 240)  # Black background
+
+    # Button dimensions and positions
+    button_width = 240
+    button_height = 150
+    left_x = 20
+    right_x = 240
+    top_y = 20
+    bottom_y = 140
+
+    # Function to draw a button
+    def draw_button(x, y, color, text):
+        brain.screen.set_fill_color(color)
+        brain.screen.draw_rectangle(x, y, button_width, button_height)
+        brain.screen.set_pen_color(Color.WHITE)
+        brain.screen.set_cursor(y // 20 + 1, x // 10 + 1)
+        brain.screen.print(text)
+
+    # Draw buttons
+    draw_button(left_x, top_y, Color.RED, "RED LEFT")
+    draw_button(right_x, top_y, Color.RED, "RED RIGHT")
+    draw_button(left_x, bottom_y, Color.BLUE, "BLUE LEFT")
+    draw_button(right_x, bottom_y, Color.BLUE, "BLUE RIGHT")
+
+    # Draw title
+    brain.screen.set_pen_color(Color.WHITE)
+    brain.screen.set_cursor(1, 7)
+    brain.screen.print("Select Autonomous Mode")
+
+    while True:
+        if brain.screen.pressing():
+            x, y = brain.screen.x_position(), brain.screen.y_position()
+
+            for button_x, button_y, color, mode in [
+                (left_x, top_y, Color.RED, "red_left"),
+                (right_x, top_y, Color.RED, "red_right"),
+                (left_x, bottom_y, Color.BLUE, "blue_left"),
+                (right_x, bottom_y, Color.BLUE, "blue_right")
+            ]:
+                if button_x <= x <= button_x + button_width and button_y <= y <= button_y + button_height:
+                    brain.screen.clear_screen()
+                    brain.screen.set_fill_color(color)
+                    brain.screen.draw_rectangle(0, 0, 480, 240)
+                    brain.screen.set_pen_color(Color.WHITE)
+                    brain.screen.set_cursor(5, 3)
+                    return mode
+
+
 def display_motor_temperatures():
     """
-    Continuously displays motor temperatures on the brain screen and warns on the controller.
+    Continuously displays motor temperatures on the brain screen.
     """
     while True:
         brain.screen.clear_screen()
+        brain.screen.set_cursor(1, 1)
+        brain.screen.print("Motor Temperatures:")
+
         temperatures = [
-            left_drive_1.temperature(CELSIUS),
-            left_drive_2.temperature(CELSIUS),
-            right_drive_1.temperature(CELSIUS),
-            right_drive_2.temperature(CELSIUS),
+            left_drive_1.temperature('celsius'),
+            left_drive_2.temperature('celsius'),
+            right_drive_1.temperature('celsius'),
+            right_drive_2.temperature('celsius'),
         ]
 
-        for i, temp in enumerate(temperatures):
-            brain.screen.set_cursor(i + 1, 1)
-            brain.screen.print(f"Motor {i + 1}: {temp:.1f}C")
-
+        # Check for warnings
         if any(temp >= TEMP_WARNING_THRESHOLD for temp in temperatures):
             controller.screen.clear_screen()
             controller.screen.set_cursor(1, 1)
@@ -175,49 +234,7 @@ def display_motor_temperatures():
 
         sleep(500)
 
-def select_autonomous():
-    """
-    Allows the user to select an autonomous routine via the brain's touchscreen.
-    """
-    brain.screen.clear_screen()
-
-    # Set a background color
-    brain.screen.set_fill_color(Color.BLACK)
-    brain.screen.draw_rectangle(0, 0, 480, 240)
-
-    # Set common properties for buttons
-    button_width, button_height = 220, 60
-    button_spacing = 20
-
-    # Button positions
-    button_x = (480 - button_width) // 2
-    red_left_y = 50
-    red_right_y = red_left_y + button_height + button_spacing
-
-    # Draw buttons
-    brain.screen.set_fill_color(Color.RED)
-    brain.screen.draw_rectangle(button_x, red_left_y, button_width, button_height)
-    brain.screen.set_fill_color(Color.RED)
-    brain.screen.draw_rectangle(button_x, red_right_y, button_width, button_height)
-
-    # Add button labels
-    brain.screen.set_pen_color(Color.WHITE)
-    brain.screen.set_cursor(3, 8)
-    brain.screen.print("RED LEFT CORNER")
-    brain.screen.set_cursor(6, 8)
-    brain.screen.print("RED RIGHT CORNER")
-
-    # Wait for user to select a button
-    while True:
-        if brain.screen.pressing():
-            x, y = brain.screen.x_position(), brain.screen.y_position()
-
-            if button_x <= x <= button_x + button_width:
-                if red_left_y <= y <= red_left_y + button_height:
-                    return "red_left"
-                elif red_right_y <= y <= red_right_y + button_height:
-                    return "red_right"
-
+# Autonomous routines
 def red_left_negative_corner():
     piston1.open()
     pid_drive(32.5)
@@ -240,18 +257,16 @@ def red_right_positive_corner():
 
 # Autonomous entry point
 def autonomous():
-    selected_auton = select_autonomous()
-
     if selected_auton == "red_left":
         red_left_negative_corner()
     elif selected_auton == "red_right":
         red_right_positive_corner()
 
+# User Control Task
 def drive_task():
-
     while True:
-        forward = controller.axis3.position()  # Forward/backward control
-        turn = controller.axis4.position()     # Left/right turn control
+        forward = controller.axis3.position()
+        turn = controller.axis4.position()
 
         left_speed = forward + turn
         right_speed = forward - turn
@@ -261,24 +276,21 @@ def drive_task():
         right_drive_1.spin(REVERSE, right_speed, PERCENT)
         right_drive_2.spin(REVERSE, right_speed, PERCENT)
 
-        # Conveyor control using right joystick (vertical axis only)
+        # Conveyor control
         conveyor_speed = controller.axis2.position()
         if conveyor_speed != 0:
             conveyor_motor1.spin(FORWARD, conveyor_speed, PERCENT)
         else:
             conveyor_motor1.stop()
 
-        # Pneumatic control using L1 and R1 buttons
+        # Pneumatic control
         if controller.buttonL1.pressing():
             piston1.close()
-        if controller.buttonR1.pressing():
-            piston1.close()
-        elif controller.buttonR2.pressing():
+        elif controller.buttonR1.pressing():
             piston1.open()
-        elif controller.buttonL2.pressing():
-            piston1.open()
-        
+
         sleep(10)
 
-# Competition setup
+# Main program
+selected_auton = select_autonomous()
 competition = Competition(drive_task, autonomous)
