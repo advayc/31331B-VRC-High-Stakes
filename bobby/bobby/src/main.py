@@ -19,11 +19,13 @@ controller = Controller()
 # Drive motors
 left_drive_1 = Motor(Ports.PORT1, GearSetting.RATIO_18_1, False)
 left_drive_2 = Motor(Ports.PORT2, GearSetting.RATIO_18_1, False)
-right_drive_1 = Motor(Ports.PORT3, GearSetting.RATIO_18_1, True)
-right_drive_2 = Motor(Ports.PORT4, GearSetting.RATIO_18_1, True)
+left_drive_3 = Motor(Ports.PORT3, GearSetting.RATIO_18_1, False)
+right_drive_1 = Motor(Ports.PORT4, GearSetting.RATIO_18_1, True)
+right_drive_2 = Motor(Ports.PORT5, GearSetting.RATIO_18_1, True)
+right_drive_3 = Motor(Ports.PORT6, GearSetting.RATIO_18_1, True)
 
 # Conveyor motor
-conveyor_motor1 = Motor(Ports.PORT5, GearSetting.RATIO_18_1, False)
+conveyor_motor1 = Motor(Ports.PORT7 GearSetting.RATIO_18_1, False)
 
 # Pneumatic piston connected to three-wire ports
 piston1 = Pneumatics(brain.three_wire_port.c)
@@ -119,8 +121,10 @@ def rotate_left():
     # Spin motors to turn left
     left_drive_1.spin(FORWARD, TURN_SPEED, PERCENT)
     left_drive_2.spin(FORWARD, TURN_SPEED, PERCENT)
+    left_drive_3.spin(FORWARD, TURN_SPEED, PERCENT)
     right_drive_1.spin(REVERSE, TURN_SPEED, PERCENT)
     right_drive_2.spin(REVERSE, TURN_SPEED, PERCENT)
+    right_drive_3.spin(REVERSE, TURN_SPEED, PERCENT)
 
     # Turn for a specified duration
     sleep(TURN_DURATION_MS)
@@ -128,8 +132,10 @@ def rotate_left():
     # Stop all motors with a brake
     left_drive_1.stop(BRAKE)
     left_drive_2.stop(BRAKE)
+    left_drive_3.stop(BRAKE)
     right_drive_1.stop(BRAKE)
     right_drive_2.stop(BRAKE)
+    right_drive_3.stop(BRAKE)
     
 def rotate_right():
     """

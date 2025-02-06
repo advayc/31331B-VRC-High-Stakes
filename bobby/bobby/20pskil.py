@@ -25,7 +25,7 @@ conveyor_motor1 = Motor(Ports.PORT5, GearSetting.RATIO_18_1, False)
 flag = Motor(Ports.PORT6, GearSetting.RATIO_18_1, False)
 
 # Pneumatic pistons connected to three-wire ports
-piston = Pneumatics(brain.three_wire_port.c)
+piston1 = Pneumatics(brain.three_wire_port.c)
 
 # Constants
 CONVEYOR_SPEED = 100
@@ -48,7 +48,7 @@ def toggle_flag_position(flagup=True):
 
 def inches_to_degrees(target_distance_inches):
     # Correction factor to adjust for overshooting
-    CORRECTION_FACTOR = 0  # Robot travels 1.5x the intended distance
+    CORRECTION_FACTOR = 3.5  # Robot travels 3.3x the intended distance
     corrected_distance = target_distance_inches / CORRECTION_FACTOR
     return (corrected_distance / WHEEL_CIRCUMFERENCE_INCHES) * 360
 
@@ -58,7 +58,7 @@ def get_scaled_pid_constants(distance_inches):
     Returns scaled values of KP, KI, and KD.
     """
     if distance_inches > 24:  # Long distance
-        return 0.55, 0.015, 0.2  # Reduced Kp, slightly increased Kd
+        return 0.8, 0.03, 0.15  # Significantly increased Kp, increased Ki, further reduced Kd
     elif distance_inches > 12:  # Medium distance
         return 0.45, 0.008, 0.12  # Reduced Kp, slightly increased Kd
     else:  # Short distance
@@ -111,14 +111,14 @@ def pid_drive(target_distance_inches):
     left_drive_2.stop(BRAKE)
     right_drive_1.stop(BRAKE)
     right_drive_2.stop(BRAKE)
-def rotate_left():
+def rotate_left(time=450):
     """
     Rotates the robot 90 degrees to the left using motor control.
     Assumes a differential drive system with equal speeds on left and right sides.
     """
     # Constants for rotation
     TURN_SPEED = 50  # Speed percentage for the turn
-    TURN_DURATION_MS = 400  # Adjust this based on your robot's turning behavior
+    TURN_DURATION_MS = time  # Adjust this based on your robot's turning behavior
 
     # Spin motors to turn left
     left_drive_1.spin(FORWARD, TURN_SPEED, PERCENT)
@@ -134,14 +134,15 @@ def rotate_left():
     left_drive_2.stop(BRAKE)
     right_drive_1.stop(BRAKE)
     right_drive_2.stop(BRAKE)
-def rotate_right():
+
+def rotate_right(time=450):
     """
     Rotates the robot 90 degrees to the left using motor control.
     Assumes a differential drive system with equal speeds on left and right sides.
     """
     # Constants for rotation
     TURN_SPEED = 50  # Speed percentage for the turn
-    TURN_DURATION_MS = 420  # Adjust this based on your robot's turning behavior
+    TURN_DURATION_MS = time  # Adjust this based on your robot's turning behavior
 
     # Spin motors to turn left
     left_drive_1.spin(REVERSE, TURN_SPEED, PERCENT)
@@ -160,19 +161,9 @@ def rotate_right():
 
 
 def autonomous():
-    piston.open()
-    pid_drive(19)
-    piston.close()
-    sleep(500)
-    conveyor_motor1.spin(FORWARD, CONVEYOR_SPEED, PERCENT)
-    sleep(300)
-    conveyor_motor1.stop()
-    rotate_right()
-
-
-'''    piston.open()
+    """piston1.open()
     pid_drive(32)   
-    piston.close()
+    piston1.close()
     sleep(500)
     pid_drive(-6)
     sleep(200)
@@ -180,11 +171,32 @@ def autonomous():
     sleep(200)
     pid_drive(-5)
     pid_drive(-1)
-    pid_drive(1)
+    pid_drive(1)"""
     """rotate_right()
     pid_drive(-30)"""
-
-'''
+    pid_drive(-21)
+    sleep(500)
+    rotate_left(260)
+    pid_drive(-75)
+    sleep(500)
+    pid_drive(12)
+    pid_drive(-12)
+    pid_drive(12)
+    sleep(500)
+    rotate_left(230)
+    pid_drive(-60)
+    rotate_left(20)
+    pid_drive(-70)
+    """sleep(1500)
+    rotate_right(475)
+    sleep(800)
+    pid_drive(-21)
+    sleep(100)
+    pid_drive(-29)
+    pid_drive(-5)
+    sleep(800)
+    conveyor_motor1.stop()
+"""
 def display_controls_summary():
     """
     Displays a summary of controls on the controller screen.
@@ -223,13 +235,13 @@ def drive_task():
 
         # Pneumatic control using L1 and R1 buttons
         if controller.buttonL1.pressing():
-            piston.close()
+            piston1.close()
         if controller.buttonR1.pressing():
-            piston.close()
+            piston1.close()
         elif controller.buttonR2.pressing():
-            piston.open()
+            piston1.open()
         elif controller.buttonL2.pressing():
-            piston.open()
+            piston1.open()
         
         # Flag control
         if controller.buttonUp.pressing():

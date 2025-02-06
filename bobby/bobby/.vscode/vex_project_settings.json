@@ -4,15 +4,15 @@
 		"json": 2
 	},
 	"project": {
-		"name": "auton select",
-		"description": "auton selection",
+		"name": "20psave",
+		"description": "skills thing",
 		"creationDate": "11/19/2024, 6:42:43 PM",
 		"platform": "V5",
 		"language": "python",
-		"slot": 1,
+		"slot": 3,
 		"sdkVersion": "V5_1_0_1_25",
 		"python": {
-			"main": "src/main.py"
+			"main": "20pskil.py"
 		}
 	}
 }
