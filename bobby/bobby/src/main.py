@@ -192,11 +192,6 @@ def select_autonomous():
     draw_button(left_x, bottom_y, Color.BLUE, "BLUE LEFT")
     draw_button(right_x, bottom_y, Color.BLUE, "BLUE RIGHT")
 
-    # Draw title
-    brain.screen.set_pen_color(Color.WHITE)
-    brain.screen.set_cursor(1, 7)
-    brain.screen.print("Select Autonomous Mode")
-
     while True:
         if brain.screen.pressing():
             x, y = brain.screen.x_position(), brain.screen.y_position()
@@ -214,7 +209,6 @@ def select_autonomous():
                     brain.screen.set_pen_color(Color.WHITE)
                     brain.screen.set_cursor(5, 3)
                     return mode
-
 
 def display_motor_temperatures():
     """
