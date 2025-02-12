@@ -159,7 +159,7 @@ def rotate_right():
     right_drive_2.stop(BRAKE)
 
 
-def autonomous():
+def autonomous(): # 16p skilz
     piston.open()
     pid_drive(19)
     piston.close()

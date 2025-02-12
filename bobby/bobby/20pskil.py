@@ -161,20 +161,38 @@ def rotate_right(time=450):
 
 
 def autonomous():
-    """piston1.open()
-    pid_drive(32)   
+    piston1.close()
+    pid_drive(19)
+    piston1.open()
+    sleep(500)
+    conveyor_motor1.spin(FORWARD, CONVEYOR_SPEED, PERCENT)
+    sleep(2000)
+    rotate_right(475)
+    sleep(300)
+    pid_drive(-28)
+    sleep(1000)
+    rotate_right(515)
+    sleep(500)
+    pid_drive(-28)
+    sleep(2500)
+    rotate_left(590)
+    sleep(1000)
+    pid_drive(45)
+    sleep(300)
     piston1.close()
     sleep(500)
-    pid_drive(-6)
+    pid_drive(-20)
+    sleep(500)
+    rotate_left(250)
     sleep(200)
-    conveyor_motor1.spin(FORWARD, CONVEYOR_SPEED, PERCENT)
-    sleep(200)
-    pid_drive(-5)
-    pid_drive(-1)
-    pid_drive(1)"""
-    """rotate_right()
-    pid_drive(-30)"""
-    pid_drive(-21)
+    rotate_left(500)
+    sleep(300)
+    pid_drive(2)
+    
+
+
+
+    """""pid_drive(-21)
     sleep(500)
     rotate_left(260)
     pid_drive(-75)
@@ -183,20 +201,34 @@ def autonomous():
     pid_drive(-12)
     pid_drive(12)
     sleep(500)
-    rotate_left(230)
+    rotate_right(715)
+    sleep(1000)
+    pid_drive(-28)
+
+    rotate_right(200)
+    sleep(500)
     pid_drive(-60)
-    rotate_left(20)
-    pid_drive(-70)
-    """sleep(1500)
-    rotate_right(475)
-    sleep(800)
-    pid_drive(-21)
-    sleep(100)
-    pid_drive(-29)
-    pid_drive(-5)
-    sleep(800)
-    conveyor_motor1.stop()
-"""
+    rotate_right(300)
+    sleep(500)
+    pid_drive(-60)
+    pid_drive(30)
+
+    rotate_left(500)
+    sleep(700)
+    pid_drive(-100)
+    rotate_left(300)
+    sleep(400)
+    pid_drive(-100)
+
+    rotate_left(715)
+    sleep(1000)
+    pid_drive(-50)
+"""""
+
+
+
+
+
 def display_controls_summary():
     """
     Displays a summary of controls on the controller screen.
