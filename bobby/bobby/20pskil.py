@@ -188,6 +188,9 @@ def autonomous():
     rotate_left(500)
     sleep(300)
     pid_drive(2)
+    rotate_right(450)
+    sleep(800)
+    pid_drive(70)
     
 
 

@@ -12,7 +12,7 @@
 		"slot": 4,
 		"sdkVersion": "V5_1_0_1_25",
 		"python": {
-			"main": "20pskil.py"
+			"main": "src/20pskil.py"
 		}
 	}
 }
