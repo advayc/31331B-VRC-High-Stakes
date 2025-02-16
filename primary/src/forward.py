@@ -162,77 +162,11 @@ def rotate_right(time=450):
 
 def autonomous():
     piston1.close()
-    pid_drive(19)
+    pid_drive(36)
     piston1.open()
     sleep(500)
+
     conveyor_motor1.spin(FORWARD, CONVEYOR_SPEED, PERCENT)
-    sleep(2000)
-    rotate_right(410)
-    sleep(300)
-    pid_drive(-27)
-    sleep(1000)
-    rotate_right(515)
-    sleep(500)
-    pid_drive(-28)
-    sleep(2500)
-    rotate_left(590)
-    sleep(1000)
-    pid_drive(45)
-    sleep(300)
-    piston1.close()
-    sleep(500)
-    pid_drive(36)
-    pid_drive(-6)
-    sleep(100)
-    pid_drive(6)
-    """sleep(500)
-    pid_drive(-20)
-    sleep(500)
-    rotate_left(250)
-    sleep(200)
-    rotate_left(500)
-    sleep(300)
-    pid_drive(2)
-    rotate_right(450)
-    sleep(800)
-    pid_drive(70)
-    """
-
-
-
-    """""pid_drive(-21)
-    sleep(500)
-    rotate_left(260)
-    pid_drive(-75)
-    sleep(500)
-    pid_drive(12)
-    pid_drive(-12)
-    pid_drive(12)
-    sleep(500)
-    rotate_right(715)
-    sleep(1000)
-    pid_drive(-28)
-
-    rotate_right(200)
-    sleep(500)
-    pid_drive(-60)
-    rotate_right(300)
-    sleep(500)
-    pid_drive(-60)
-    pid_drive(30)
-
-    rotate_left(500)
-    sleep(700)
-    pid_drive(-100)
-    rotate_left(300)
-    sleep(400)
-    pid_drive(-100)
-
-    rotate_left(715)
-    sleep(1000)
-    pid_drive(-50)
-"""""
-
 
 
 
