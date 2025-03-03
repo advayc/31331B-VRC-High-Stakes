@@ -43,13 +43,10 @@ def toggle_flag_position(flagup=True):
     if flagup:
         # Run flag motor for 1 second (300 ms) to move down
         flag.spin(FORWARD, 30, PERCENT)
-        sleep(300)
-        flag.stop()
     else:
         # Run flag motor for 1 second (300 ms) to move up
         flag.spin(REVERSE, 25, PERCENT)
-        sleep(300)
-        flag.stop()
+
 
 def inches_to_degrees(target_distance_inches):
     return (target_distance_inches / WHEEL_CIRCUMFERENCE_INCHES) * 360
